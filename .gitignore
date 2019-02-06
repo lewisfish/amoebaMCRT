@@ -3,3 +3,11 @@
 *.dat
 *.png
 *.txt
+*.gp
+*.py
+*.out
+build/
+bin/
+data/
+*.jpg
+*.jpeg
