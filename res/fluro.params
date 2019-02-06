@@ -1,0 +1,15 @@
+name:nadh
+excite:nadh.dat
+emission:nadh_fluro.dat
+location:10000
+concs: 0.0001726 0.0 0.0 0.0 0.0
+name:fad
+excite:fad.dat
+emission:fad_fluro.dat
+location:00100
+concs: 0.0 0.0 0.5265906 0.0 0.0
+name:riboflavin
+excite:nadh.dat
+emission:tyrosine_fluro.dat
+location:01000
+concs: 0.0 0.0460119 0.0 0.0 0.0

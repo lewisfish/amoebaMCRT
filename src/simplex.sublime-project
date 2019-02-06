@@ -1,0 +1,19 @@
+{
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				"*.mod",
+				"*.txt"
+			],
+			"folder_exclude_patterns":
+			[
+				"papers",
+				"build",
+				"bin"
+			],
+			"path":	"."
+		}
+	]
+}
