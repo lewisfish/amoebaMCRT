@@ -44,16 +44,18 @@ Module fluorophores
       end function get_wave_fn
 
 
-      subroutine init_fluros(f_array, file)
+      subroutine init_fluros(f_array, file, id, comm)
 
-         use constants, only : resdir
+        use constants, only : resdir
+        use mpi_f08,   only : mpi_comm
 
         implicit none
         
-        type(fluro), intent(INOUT), allocatable :: f_array(:)
-        character(*), intent(IN)  :: file
+        type(fluro),    intent(INOUT), allocatable :: f_array(:)
+        character(*),   intent(IN)                 :: file
+        type(mpi_comm), intent(IN)                 :: comm
 
-        integer :: u, numFluro, io, i, j, pos, p, pos2, numLines
+        integer :: u, numFluro, io, i, j, pos, p, pos2, numLines, id
         real :: concs(5)
         character(len=256) :: line
         character(len=:), allocatable :: word
@@ -85,34 +87,54 @@ Module fluorophores
         open(newunit=u,file=trim(resdir)//file, iostat=io, status="old")
         concs = 0.
         j = 0
-        do i = 1, numLines
-            read(u,"(a256)", iostat=io)line
-            if(IS_IOSTAT_END(io))exit
+        if(id == 0)then
+            do i = 1, numLines
+                read(u,"(a256)", iostat=io)line
+                if(IS_IOSTAT_END(io))exit
 
-            pos = scan(trim(line), ":")
-            word = line(:pos-1)
+                pos = scan(trim(line), ":")
+                word = line(:pos-1)
 
-            select case(word)
-                case ("name")
-                    j = j + 1
-                    f_array(j)%name = trim(line(pos+1:))
-                case ("excite")
-                    f_array(j)%exciteName = trim(line(pos+1:))
-                case ("emission")
-                    f_array(j)%emissionName = trim(line(pos+1:))
-                case ("location")
-                     f_array(j)%location = trim(line(pos+1:))
-                     if(len_trim(f_array(j)%location) < 5 .or.len_trim(f_array(j)%location)  > 5)then
-                        error stop "error in fluorophores param file: location"
-                     end if
-                case ("concs")
-                    do p = 1, 5
-                        pos = index(trim(line), " ")
-                        line = trim(line(pos+1:))
-                        pos2 = index(trim(line), " ")
-                        read(line(:pos2), "(f100.50)")f_array(j)%concs(p)
-                    end do
-            end select
+                select case(word)
+                    case ("name")
+                        j = j + 1
+                        f_array(j)%name = trim(line(pos+1:))
+                    case ("excite")
+                        f_array(j)%exciteName = trim(line(pos+1:))
+                    case ("emission")
+                        f_array(j)%emissionName = trim(line(pos+1:))
+                    case ("location")
+                         f_array(j)%location = trim(line(pos+1:))
+                         if(len_trim(f_array(j)%location) < 5 .or.len_trim(f_array(j)%location)  > 5)then
+                            error stop "error in fluorophores param file: location"
+                         end if
+                    case ("concs")
+                        do p = 1, 5
+                            pos = index(trim(line), " ")
+                            line = trim(line(pos+1:))
+                            pos2 = index(trim(line), " ")
+                            read(line(:pos2), "(f100.50)")f_array(j)%concs(p)
+                        end do
+                end select
+            end do
+        end if
+
+        !send names to other processes to avoid weird bug...
+        do i = 1, numFluro
+            line = ""
+            if(id == 0)line = f_array(i)%name
+            call sendWord(line, comm, id)
+            f_array(i)%name = trim(line)
+
+            line = ""
+            if(id == 0)line = f_array(i)%exciteName
+            call sendWord(line, comm, id)
+            f_array(i)%exciteName = trim(line)
+
+            line = ""
+            if(id == 0)line = f_array(i)%emissionName
+            call sendWord(line, comm, id)
+            f_array(i)%emissionName = trim(line)
         end do
 
 
@@ -126,6 +148,28 @@ Module fluorophores
         end do
         close(u)
     end subroutine init_fluros
+
+
+    subroutine sendWord(word, comm, id)
+    !master process sends characters to all other processes
+        use mpi_f08
+
+        implicit none
+        
+        integer :: id, n
+        type(mpi_comm) :: comm
+
+        character(len=256) :: word, line
+        line = ""
+        if(id == 0)then
+            line = word
+        end if
+        n = len(trim(line))
+        call mpi_bcast(n, 1, mpi_integer, 0, comm)
+        call mpi_bcast(line, n, mpi_character, 0, comm)
+        word = trim(line)
+
+    end subroutine sendWord
 
 
      subroutine readfile_array2D(filename, array, flag, colsize)

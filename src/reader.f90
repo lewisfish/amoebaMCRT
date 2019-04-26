@@ -2,6 +2,9 @@ module reader_mod
 
     implicit none
 
+    private
+    public :: reader1
+
     contains
         subroutine reader0(hgg,mua,mus,cnt)
 

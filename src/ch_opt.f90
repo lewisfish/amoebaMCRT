@@ -49,7 +49,7 @@ module ch_opt
         ! save the "default" optical properties to an array for faster program execution
 
             use fluorophores, only : fluro
-            use opt_prop,     only : wave_incd, opt_array, hgg
+            use opt_prop,     only : wave_incd, opt_array
             use skin_layers,  only : stratum, Epidermis, Pap_dermis, Ret_Dermis, Hypo_Dermis
 
             implicit none
