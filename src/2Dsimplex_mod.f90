@@ -198,7 +198,7 @@ module simplex
             !median filter output
             if(id == 0)call execute_command_line("./../data/medfilter.py ./../data/fluro_out.dat")
 
-
+            call readfile(trim(fileplace)//"fluro_out.dat", src)
             fitness = 0.d0
             do i = 1, size(tar)
                 fitness = fitness + (tar(i) - src(i))**2.
@@ -211,6 +211,7 @@ module simplex
                     do i = 1, size(src)
                         write(u,*)src(i)
                     end do
+                    call execute_command_line("./../data/medfilter.py ./../data/best_fluro.dat")
                     close(u)
                 end if
             end if

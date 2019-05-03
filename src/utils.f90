@@ -403,6 +403,9 @@ module utils
 
             open(newunit=u,file='/proc/zoneinfo',status='old')
             low = 0
+            sreclaimable = 0
+            inactive = 0
+            freeram = 0
             do 
                 read(u,*, iostat=io)tmp, i
                 if(IS_IOSTAT_END(io))exit

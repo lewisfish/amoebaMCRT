@@ -14,10 +14,10 @@ program simpRunner
     type(point) :: x1, x2, x3, x4
     integer        :: i, u, evals, totalevals, N, seed
     logical        :: debug=.false., fitbool, sizebool
-    real           :: start, finish
+    real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB
     character(len=11) :: file
 
-    file = "tetra22.dat"
+    file = "four-1.dat"
 
     comm = mpi_comm_world
     call mpi_init()
@@ -63,11 +63,19 @@ program simpRunner
         delta = 0.5d0   !shrink      coeff (sigma)
     end if
 
-    !concs = [0.0001, .5, .01]
-    x1 = point([.000125d0, .50d0, .005d0])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
-    x2 = point([x1%cor(1) + .05,   x1%cor(2) + .0025, x1%cor(3) + .0025]) 
-    x3 = point([x1%cor(1) + .0025, x1%cor(2) + .05,   x1%cor(3) + .0025]) 
-    x4 = point([x1%cor(1) + .0025, x1%cor(2) + .0025, x1%cor(3) + .05]) 
+    !concs = [1.05d-6, 5.25d-4, 1.25d-4]
+    x1 = point([2.d-6, 8.d-4, 10.d-4])!point([.000125d0, .50d0, .005d0])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
+    xvarB = x1%cor(1) * .25d0
+    yvarB = x1%cor(2) * .25d0
+    zvarB = x1%cor(3) * .25d0
+    xvars = x1%cor(1) * .05d0
+    yvars = x1%cor(2) * .05d0
+    zvars = x1%cor(3) * .05d0
+
+
+    x2 = point([x1%cor(1) + xvarB, x1%cor(2) + yvarS, x1%cor(3) + zvarS]) 
+    x3 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarB, x1%cor(3) + zvarS]) 
+    x4 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarS, x1%cor(3) + zvarB]) 
     points = [x1, x2, x3, x4]
 
    ! x1 = point([5.6872390137768913d-5, 0.17048350623394193, 5.6788648669261477d-3], 0.32545115121224849)     
@@ -88,7 +96,7 @@ program simpRunner
         write(u,*)" "
         close(u)
 
-        open(newunit=u,file=trim(fileplace)//"log22.dat",status="replace")
+        open(newunit=u,file=trim(fileplace)//"log-four-1.dat",status="replace")
         write(u,*)0, sizeof(points), points(1)%fit, avgfit(points), 0.0
         close(u)
     end if
@@ -115,7 +123,7 @@ program simpRunner
             write(u,*)" "
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//"log22.dat",position="append")
+            open(newunit=u,file=trim(fileplace)//"log-four-1.dat",position="append")
             write(u,*)i, sizeof(points), points(1)%fit, avgfit(points), real(totalevals)/ real(i)
             close(u)
         end if

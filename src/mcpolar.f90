@@ -46,7 +46,7 @@ module monte
         real    :: finish2, tmp, mu_tot, mua_skin
 
         !allocate and set arrays to 0
-        call alloc_array(numproc, pflag)
+        call alloc_array(numproc)
 
         call zarray
         src = 0.d0
@@ -69,7 +69,7 @@ module monte
         wave    = wave_in
         wave_incd = wave !set incdent wavelength
 
-        call init_fluros(f_array, trim(paramsFile))
+        call init_fluros(f_array, trim(paramsFile), id, comm)
 
         call gridset(f_array, id)
 
@@ -98,6 +98,7 @@ module monte
         fluroglobal = 0
         do j = 1, nphotons
 
+            e = 1
             wave = wave_in
             f_array(:)%bool = .false.
             hgg = gethgg(wave)
@@ -132,7 +133,7 @@ module monte
             call sourceph(xcell,ycell,zcell,jseed)
 
             !****** Find scattering location
-            call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, j)
+            call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e)
 
             !******** Photon scatters in grid until it exits (tflag=TRUE) 
             do while(tflag.eqv..FALSE.)
@@ -152,9 +153,10 @@ module monte
                     call sample(f_array(1)%emission, f_array(1)%cdf, wave, jseed)
                      call opt_set(wave, f_array)
                     f_array(1)%bool = .true.
+                    e = 1
                     f_array(2:)%bool = .false.
-                    hgg = 0.
-                    g2 = hgg**2
+                    hgg = 0.d0
+                    g2 = 0.d0
                     call stokes(jseed)
                     hgg = gethgg(wave)
                     g2 = hgg**2
@@ -163,10 +165,11 @@ module monte
                     call sample(f_array(2)%emission, f_array(2)%cdf,wave, jseed)
                     call opt_set(wave, f_array)
                     f_array(2)%bool = .true.
+                    e = 2
                     f_array(1)%bool = .false.
                     f_array(3)%bool = .false.
-                    hgg = 0.
-                    g2 = hgg**2
+                    hgg = 0.d0
+                    g2 = 0.d0
                     call stokes(jseed)
                     hgg = gethgg(wave)
                     g2 = hgg**2 
@@ -175,10 +178,11 @@ module monte
                     call sample(f_array(3)%emission, f_array(3)%cdf,wave, jseed)
                     call opt_set(wave, f_array)
                     f_array(3)%bool = .true.
+                    e = 3
                     f_array(2)%bool = .false.
                     f_array(1)%bool = .false.
-                    hgg = 0.
-                    g2 = hgg**2
+                    hgg = 0.d0
+                    g2 = 0.d0
                     call stokes(jseed)
                     hgg = gethgg(wave)
                     g2 = hgg**2   
@@ -192,7 +196,7 @@ module monte
                 end if
 
                 !************ Find next scattering location
-                call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, j)
+                call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e)
 
             end do
 
@@ -211,7 +215,9 @@ module monte
         ! call mpi_allreduce(jmean, jmeanglobal, size(jmeanglobal), mpi_double_precision, mpi_sum, comm)
 
         src = fluroglobal(:,1) + fluroglobal(:,2) + fluroglobal(:,3)
-        src = src / max(real(maxval(src)), 1.)
+        if(id==0)print*,sum(src)
+
+        ! src = src / max(real(maxval(src)), 1.)
         if(id == 0)then
 
             ! open(newunit=j,file=trim(fileplace)//"all_out1.dat")
@@ -219,7 +225,6 @@ module monte
             !     write(j,*)i,fluro_img(i,:)
             ! end do
             ! close(j)
-
             call writer(src)
         end if
 
