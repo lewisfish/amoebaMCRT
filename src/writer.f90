@@ -13,7 +13,6 @@ CONTAINS
    integer :: u, i
    real, intent(IN) :: src(:)
 
-
    open(newunit=u,file=trim(fileplace)//"fluro_out.dat")
    do i = 1, size(src)
       write(u,*)src(i)

@@ -13,12 +13,11 @@ program simpRunner
     type(point),allocatable    :: points(:)
     type(point) :: x1, x2, x3, x4
     integer        :: i, u, evals, totalevals, N, seed
-    logical        :: debug=.false., fitbool, sizebool
+    logical        :: debug=.true., fitbool, sizebool
     real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB
     character(len=11) :: file
 
-    file = "four-1.dat"
-
+    file = "four-5.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -64,7 +63,7 @@ program simpRunner
     end if
 
     !concs = [1.05d-6, 5.25d-4, 1.25d-4]
-    x1 = point([2.d-6, 8.d-4, 10.d-4])!point([.000125d0, .50d0, .005d0])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
+    x1 = point([5.d-6, 1.d-4, 20.d-6])!point([.000125d0, .50d0, .005d0])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
     xvarB = x1%cor(1) * .25d0
     yvarB = x1%cor(2) * .25d0
     zvarB = x1%cor(3) * .25d0
@@ -96,7 +95,7 @@ program simpRunner
         write(u,*)" "
         close(u)
 
-        open(newunit=u,file=trim(fileplace)//"log-four-1.dat",status="replace")
+        open(newunit=u,file=trim(fileplace)//"log-four-5.dat",status="replace")
         write(u,*)0, sizeof(points), points(1)%fit, avgfit(points), 0.0
         close(u)
     end if
@@ -123,7 +122,7 @@ program simpRunner
             write(u,*)" "
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//"log-four-1.dat",position="append")
+            open(newunit=u,file=trim(fileplace)//"log-four-5.dat",position="append")
             write(u,*)i, sizeof(points), points(1)%fit, avgfit(points), real(totalevals)/ real(i)
             close(u)
         end if
@@ -144,7 +143,7 @@ program simpRunner
             end if
         end if
     end do
-    close(u)
+
     points = sort(points)
     if(id == 0)then
         print*,""
@@ -153,6 +152,7 @@ program simpRunner
         elseif(fitbool)then
             print*,"converged due to small fit value"
         else
+            print*,"error?"
         end if
         print*,"i     x          y          z          avg evals   total evals"
         print("(I5.1,1x,4F10.5,9x,I5.1)"),i,points(1)%cor(:), real(totalevals) / real(i), totalevals

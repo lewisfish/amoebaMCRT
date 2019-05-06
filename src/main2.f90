@@ -39,7 +39,7 @@ program main2
             !nadh, fad, !madeup
     ! concs = [.01d-2, .03d-3,0.d0]
     !nadh, fad, madeup
-    concs = [0.0001, .5, .01]
+    concs = [1.05d-6, 5.25d-4, 1.25d-4]![0.0000001, .0005, .00001]
 
     comm = mpi_comm_world
     call mpi_init()
@@ -71,7 +71,6 @@ program main2
     write(u,"(a,F9.7,a)")"concs: 0.0 ",concs(3)," 0.0 0.0 0.0"
     close(u)
 
-stop
 
     call mcpolar(concs, numproc, id, .True., i, j, src, comm)
 

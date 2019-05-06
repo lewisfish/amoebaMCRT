@@ -13,7 +13,7 @@ CONTAINS
     !
         use constants,   only : xmax, ymax, zmax
         use photon_vars, only : xp, yp, zp
-        use iarray,      only : rhokap, jmean
+        use iarray,      only : rhokap
         use fluorophores, only : fluro
 
         use vector_class

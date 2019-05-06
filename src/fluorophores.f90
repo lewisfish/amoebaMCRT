@@ -44,16 +44,14 @@ Module fluorophores
       end function get_wave_fn
 
 
-      subroutine init_fluros(f_array, file, id, comm)
+      subroutine init_fluros(f_array, file, id)
 
         use constants, only : resdir
-        use mpi_f08,   only : mpi_comm
 
         implicit none
         
         type(fluro),    intent(INOUT), allocatable :: f_array(:)
         character(*),   intent(IN)                 :: file
-        type(mpi_comm), intent(IN)                 :: comm
 
         integer :: u, numFluro, io, i, j, pos, p, pos2, numLines, id
         real :: concs(5)
@@ -87,7 +85,6 @@ Module fluorophores
         open(newunit=u,file=trim(resdir)//file, iostat=io, status="old")
         concs = 0.
         j = 0
-        if(id == 0)then
             do i = 1, numLines
                 read(u,"(a256)", iostat=io)line
                 if(IS_IOSTAT_END(io))exit
@@ -117,59 +114,17 @@ Module fluorophores
                         end do
                 end select
             end do
-        end if
-
-        !send names to other processes to avoid weird bug...
-        do i = 1, numFluro
-            line = ""
-            if(id == 0)line = f_array(i)%name
-            call sendWord(line, comm, id)
-            f_array(i)%name = trim(line)
-
-            line = ""
-            if(id == 0)line = f_array(i)%exciteName
-            call sendWord(line, comm, id)
-            f_array(i)%exciteName = trim(line)
-
-            line = ""
-            if(id == 0)line = f_array(i)%emissionName
-            call sendWord(line, comm, id)
-            f_array(i)%emissionName = trim(line)
-        end do
-
 
         do i = 1, numFluro
             call readfile_array2D(trim(resdir)//f_array(i)%exciteName, f_array(i)%excite, 0, 2)
             call readfile_array2D(trim(resdir)//f_array(i)%emissionName, f_array(i)%emission, 0, 2)   
             allocate(f_array(i)%cdf(size(f_array(i)%emission,1)))
-            call mk_cdf(f_array(i)%emission,f_array(i)%cdf,size(f_array(i)%emission,1))
+            call mk_cdf(f_array(i)%emission, f_array(i)%cdf, size(f_array(i)%emission, 1))
             f_array(i)%bool = .false.
             f_array(i)%mua = 0.d0
         end do
         close(u)
     end subroutine init_fluros
-
-
-    subroutine sendWord(word, comm, id)
-    !master process sends characters to all other processes
-        use mpi_f08
-
-        implicit none
-        
-        integer :: id, n
-        type(mpi_comm) :: comm
-
-        character(len=256) :: word, line
-        line = ""
-        if(id == 0)then
-            line = word
-        end if
-        n = len(trim(line))
-        call mpi_bcast(n, 1, mpi_integer, 0, comm)
-        call mpi_bcast(line, n, mpi_character, 0, comm)
-        word = trim(line)
-
-    end subroutine sendWord
 
 
      subroutine readfile_array2D(filename, array, flag, colsize)
@@ -239,7 +194,7 @@ Module fluorophores
             real,    intent(INOUT) :: cdf(length)
             real                   :: summ
             integer                :: i,j
-
+            cdf = 0.d0
             do j = 1, length-1
 
                 summ = 0.

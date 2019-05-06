@@ -69,7 +69,7 @@ module monte
         wave    = wave_in
         wave_incd = wave !set incdent wavelength
 
-        call init_fluros(f_array, trim(paramsFile), id, comm)
+        call init_fluros(f_array, trim(paramsFile), id)
 
         call gridset(f_array, id)
 
