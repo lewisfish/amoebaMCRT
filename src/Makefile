@@ -1,10 +1,11 @@
 ifeq ($(FCOMP),mpifort)
-FCFLAGS = -freal-4-real-8
+FCFLAGS = -freal-4-real-8 -O2
 FCDEBUG = -g -fbacktrace -fcheck=all -fbounds-check -ffpe-trap=invalid,overflow,underflow,denormal
 FCBUILD = -Wall -Wextra -pedantic -std=f2008
 else ifeq ($(FCOMP),mpiifort)
-FCFLAGS = -O2 -xHOST -r8 -assume byterecl
+FCFLAGS = -O2 -xHOST -r8 
 FCDEBUG = -g -debug -traceback -check all -CB -CU -CA -fpe0
+#-stand f08 -assume realloc_lhs  -check all  -traceback  -warn all  -fstack-protector  -assume protect_parens  -implicitnone
 FCBUILD = -warn all -stand f08
 endif
 PROGRAM =  mcgrid
@@ -30,7 +31,8 @@ SRCS =      ran2.f \
             mcpolar.f90 \
             2Dsimplex_mod.f90 \
             simpRun.f90
-                        
+  #             main2.f90 
+                      
 OBJECTS = $(SRCS:.f90=.o)
 
 all:	$(PROGRAM)

@@ -149,7 +149,7 @@ module reader_mod
             open(10, file = filename, status = 'OLD', IOSTAT = io)
             if(io .ne. 0)then
                 print'(A,A,I2)',filename,' could not be opened. IOSTAT = ',io
-                print*,'Exiting...'
+                print*,'Exiting...reader'
                 stop
             else
                 cnt = 0

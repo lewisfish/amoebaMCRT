@@ -44,9 +44,10 @@ Module fluorophores
       end function get_wave_fn
 
 
-      subroutine init_fluros(f_array, file, id)
+      subroutine init_fluros(f_array, file, id, comm)
 
         use constants, only : resdir
+        use mpi_f08, only : mpi_comm, mpi_barrier, mpi_finalize
 
         implicit none
         
@@ -57,6 +58,7 @@ Module fluorophores
         real :: concs(5)
         character(len=256) :: line
         character(len=:), allocatable :: word
+        type(mpi_comm):: comm
 
         numFluro = 0
         numLines = 0
@@ -68,6 +70,7 @@ Module fluorophores
         end if
         
         !read file in once and get number of lines and fluros
+        call mpi_barrier(comm)
         do
             read(u,"(a256)", iostat=io)line
             if(IS_IOSTAT_END(io))exit
@@ -77,6 +80,7 @@ Module fluorophores
             numLines = numLines + 1
         end do
         close(u)
+        call mpi_barrier(comm)
 
         !allocate fluro array
         allocate(f_array(numFluro))
@@ -115,15 +119,19 @@ Module fluorophores
                 end select
             end do
 
+        call mpi_barrier(comm)
+
         do i = 1, numFluro
             call readfile_array2D(trim(resdir)//f_array(i)%exciteName, f_array(i)%excite, 0, 2)
             call readfile_array2D(trim(resdir)//f_array(i)%emissionName, f_array(i)%emission, 0, 2)   
+
             allocate(f_array(i)%cdf(size(f_array(i)%emission,1)))
             call mk_cdf(f_array(i)%emission, f_array(i)%cdf, size(f_array(i)%emission, 1))
             f_array(i)%bool = .false.
             f_array(i)%mua = 0.d0
         end do
         close(u)
+
     end subroutine init_fluros
 
 
@@ -144,7 +152,7 @@ Module fluorophores
             open(10, file = filename, status = 'OLD', IOSTAT = io)
             if(io .ne. 0)then
                 print'(A,A,I2)',filename,' could not be opened. IOSTAT = ',io
-                print*,'Exiting...'
+                print*,'Exiting...fluro'
                 stop
             else
                 cnt = 0

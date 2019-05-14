@@ -648,10 +648,10 @@ module simplex
 
             integer :: io, i, u
 
-            open(newunit=u, file = filename, status = 'OLD', IOSTAT = io)
+            open(newunit=u, file=filename, status='OLD', IOSTAT=io)
             if(io .ne. 0)then
                 print'(A,A,I2)',filename,' could not be opened. IOSTAT = ',io
-                print*,'Exiting...'
+                print*,'Exiting...simplex'
                 Error stop 
             else
                 !read in data

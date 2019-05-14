@@ -127,7 +127,7 @@ program simpRunner
             close(u)
         end if
         if(convergance(points))sizebool = .true.
-        if(minfit < .0025d0)fitbool = .true.
+        if(minfit < .04d0)fitbool = .true.
         if(i >= 1000)exit
          ! "no convergence"
         i = i + 1
