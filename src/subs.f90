@@ -35,7 +35,6 @@ implicit none
             !sets all arrays to zero
             implicit none
 
-
             ! jmean = 0.
             xface = 0.
             yface = 0.

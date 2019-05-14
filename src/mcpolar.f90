@@ -48,7 +48,7 @@ module monte
         !allocate and set arrays to 0
         call alloc_array(numproc)
 
-        call zarray
+        call zarray()
         src = 0.d0
         !**** Read in parameters from the file input.params
         open(10,file=trim(resdir)//'input.params',status='old')
@@ -231,6 +231,7 @@ module monte
         call cpu_time(finish)
 
         call dealloc_array()
+        deallocate(f_array)
         call mpi_barrier(comm)
 end subroutine mcpolar
 end module monte

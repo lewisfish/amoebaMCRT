@@ -197,7 +197,7 @@ module simplex
             call MPI_Barrier(comm)
 
             !median filter output
-            if(id == 0)call execute_command_line("./../data/medfilter.py ./../data/fluro_out.dat")
+            if(id == 0)call execute_command_line("./../data/medfilter.py ../data/fluro_out.dat")
 
             if(id==0)call readfile(trim(fileplace)//"fluro_out.dat", src)
             call mpi_bcast(src, size(src), mpi_double_precision, 0, comm)
@@ -221,15 +221,21 @@ module simplex
 
 
 
-        function sort(points) result(sorted)
+        subroutine sort(points) !result(sorted)
         !sorts small to large [n->N]
             implicit none
 
-            type(point), intent(IN) :: points(:)
+            type(point), intent(INOUT) :: points(:)
             
-            type(point) :: tmp, sorted(size(points))
+            type(point) :: tmp
+            type(point), allocatable :: sorted(:)
             integer     :: i, minIndex
 
+            allocate(sorted(size(points)))
+            allocate(sorted(1)%cor(3))
+            allocate(sorted(2)%cor(3))
+            allocate(sorted(3)%cor(3))
+            allocate(sorted(4)%cor(3))
             sorted = points
 
             do i = 1, size(points)
@@ -240,8 +246,9 @@ module simplex
                     sorted(minIndex) = tmp
                 end if
             end do
-
-        end function sort
+            points = sorted
+            deallocate(sorted)
+        end subroutine sort
 
 
         type(point) function getCentroid(points)
@@ -397,7 +404,7 @@ module simplex
 
             length = size(points)
 
-            points = sort(points)
+            call sort(points)
             cent = getCentroid(points)
 
             best = points(1)
@@ -529,11 +536,9 @@ module simplex
             minz = x1%cor(3) - (x1%cor(3) * .2d0)
             maxz = x1%cor(3) * 1.2d0
 
-
             x2 = point([minx + ran2(iseed)*(maxx - minx), miny + ran2(iseed)*(maxy - miny), minz + ran2(iseed)*(maxz - minz)])
             x3 = point([minx + ran2(iseed)*(maxx - minx), miny + ran2(iseed)*(maxy - miny), minz + ran2(iseed)*(maxz - minz)])
             x4 = point([minx + ran2(iseed)*(maxx - minx), miny + ran2(iseed)*(maxy - miny), minz + ran2(iseed)*(maxz - minz)])
-
             ! x2 = point([x1%cor(1) + .005,    x1%cor(1) + .000025, x1%cor(1) + .000025]) 
             ! x3 = point([x1%cor(1) + .000025, x1%cor(1) + .005,    x1%cor(1) + .00025]) 
             ! x4 = point([x1%cor(1) + .000025, x1%cor(1) + .000025, x1%cor(1) + .005])
@@ -546,7 +551,6 @@ module simplex
             !     end do
             !     p(i)%fit = fitFunc(p(i))
             ! end do
-
         end subroutine restart
 
 

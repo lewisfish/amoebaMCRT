@@ -17,7 +17,7 @@ program simpRunner
     real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB
     character(len=11) :: file
 
-    file = "four-5.dat"
+    file = "four-6.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -49,13 +49,13 @@ program simpRunner
 
     if(n > 2)then
     !     !Implementing the Nelder-Mead simplex algorithm with adaptive parameters. F. Gao et al (2012)
-        tol = 1.d-4
+        tol = 1.d-7
         alpha = 1.d0
         beta  = 0.75d0 - 1.d0/(2.d0*real(n))
         gamma = 1.d0 + 2.d0/real(n)
         delta = 1.d0 - 1.d0/real(n)
     else
-        tol   = 1d-4    !tolerance value
+        tol   = 1d-7    !tolerance value
         alpha = 1.d0    !reflection  coeff (alpha)
         beta  = 0.5d0   !contraction coeff (rho)
         gamma = 2.d0    !expansion   coeff (gamma)
@@ -63,7 +63,7 @@ program simpRunner
     end if
 
     !concs = [1.05d-6, 5.25d-4, 1.25d-4]
-    x1 = point([5.d-6, 1.d-4, 20.d-6])!point([.000125d0, .50d0, .005d0])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
+    x1 = point([1.05d-6, 5.25d-4, 1.25d-4])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
     xvarB = x1%cor(1) * .25d0
     yvarB = x1%cor(2) * .25d0
     zvarB = x1%cor(3) * .25d0
@@ -87,16 +87,16 @@ program simpRunner
     if(id == 0)then
         open(newunit=u,file=trim(fileplace)//trim(file), status="replace")
         write(u,*)"#0"
-        write(u,*)points(1)%cor(:),points(1)%fit
-        write(u,*)points(2)%cor(:),points(2)%fit
-        write(u,*)points(3)%cor(:),points(3)%fit
-        write(u,*)points(4)%cor(:),points(4)%fit
+        write(u,"(3ES14.4,1x,F9.5)")points(1)%cor(:),points(1)%fit
+        write(u,"(3ES14.4,1x,F9.5)")points(2)%cor(:),points(2)%fit
+        write(u,"(3ES14.4,1x,F9.5)")points(3)%cor(:),points(3)%fit
+        write(u,"(3ES14.4,1x,F9.5)")points(4)%cor(:),points(4)%fit
         write(u,*)" "
         write(u,*)" "
         close(u)
 
-        open(newunit=u,file=trim(fileplace)//"log-four-5.dat",status="replace")
-        write(u,*)0, sizeof(points), points(1)%fit, avgfit(points), 0.0
+        open(newunit=u,file=trim(fileplace)//"log-four-6.dat",status="replace")
+        write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")0, sizeof(points), points(1)%fit, avgfit(points), 0.0
         close(u)
     end if
     i = 1
@@ -114,16 +114,16 @@ program simpRunner
                                                                real(totalevals) / real(i), i
             open(newunit=u,file=trim(fileplace)//trim(file),position="append")
             write(u,*)"#"//str(i)
-            write(u,*)points(1)%cor(:),points(1)%fit
-            write(u,*)points(2)%cor(:),points(2)%fit
-            write(u,*)points(3)%cor(:),points(3)%fit
-            write(u,*)points(4)%cor(:),points(4)%fit
+            write(u,"(3ES14.4,1x,F9.5)")points(1)%cor(:),points(1)%fit
+            write(u,"(3ES14.4,1x,F9.5)")points(2)%cor(:),points(2)%fit
+            write(u,"(3ES14.4,1x,F9.5)")points(3)%cor(:),points(3)%fit
+            write(u,"(3ES14.4,1x,F9.5)")points(4)%cor(:),points(4)%fit
             write(u,*)" "
             write(u,*)" "
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//"log-four-5.dat",position="append")
-            write(u,*)i, sizeof(points), points(1)%fit, avgfit(points), real(totalevals)/ real(i)
+            open(newunit=u,file=trim(fileplace)//"log-four-6.dat",position="append")
+            write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")i, sizeof(points), points(1)%fit, avgfit(points), real(totalevals)/ real(i)
             close(u)
         end if
         if(convergance(points))sizebool = .true.
@@ -144,7 +144,7 @@ program simpRunner
         end if
     end do
 
-    points = sort(points)
+    call sort(points)
     if(id == 0)then
         print*,""
         if(sizebool)then
@@ -152,7 +152,7 @@ program simpRunner
         elseif(fitbool)then
             print*,"converged due to small fit value"
         else
-            print*,"error?"
+            print*,"Did not converge after 1000 iterations"
         end if
         print*,"i     x          y          z          avg evals   total evals"
         print("(I5.1,1x,4F10.5,9x,I5.1)"),i,points(1)%cor(:), real(totalevals) / real(i), totalevals
