@@ -15,9 +15,10 @@ program simpRunner
     integer        :: i, u, evals, totalevals, N, seed
     logical        :: debug=.true., fitbool, sizebool
     real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB
-    character(len=11) :: file
+    character(len=14) :: file, logfile
 
     file = "four-6.dat"
+    logfile = "log-four-6.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -95,7 +96,7 @@ program simpRunner
         write(u,*)" "
         close(u)
 
-        open(newunit=u,file=trim(fileplace)//"log-four-6.dat",status="replace")
+        open(newunit=u,file=trim(fileplace)//trim(logfile),status="replace")
         write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")0, sizeof(points), points(1)%fit, avgfit(points), 0.0
         close(u)
     end if
@@ -122,7 +123,7 @@ program simpRunner
             write(u,*)" "
             close(u)
 
-            open(newunit=u,file=trim(fileplace)//"log-four-6.dat",position="append")
+            open(newunit=u,file=trim(fileplace)//trim(logfile),position="append")
             write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")i, sizeof(points), points(1)%fit, avgfit(points), real(totalevals)/ real(i)
             close(u)
         end if
