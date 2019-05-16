@@ -11,7 +11,8 @@ module simplex
     real           :: target_a(1000), source(1000), tar(1000)
     type(mpi_comm) :: comm
     real           :: alpha, beta, gamma, delta, minfit, tol
-    procedure(fitness), pointer :: fitFunc => null()
+    procedure(fitness), pointer   :: fitFunc => null()
+    character(len=:), allocatable :: fmt
 
     type :: point
         real, allocatable :: cor(:)
@@ -69,6 +70,12 @@ module simplex
                 points(i)%fit = 1.d9
                 points(i)%N = N
             end do
+
+            if(n == 2)then
+                fmt = "(2ES14.4,1x,F9.5)"
+            elseif(n == 3)then
+                fmt = "(3ES14.4,1x,F9.5)"
+            end if
 
         end subroutine init_simplex
 
@@ -135,7 +142,7 @@ module simplex
 
             type(point), intent(IN) :: p
 
-            himmelblau = (p%cor(1)**2 + p%cor(2) - 11.d0)**2 + (p%cor(1) + p%cor(2)**2 - 7.d0)*2 
+            himmelblau = (p%cor(1)**2 + p%cor(2) - 11.d0)**2 + (p%cor(1) + p%cor(2)**2 - 7.d0)**2 
 
         end function himmelblau
 
@@ -254,10 +261,10 @@ module simplex
             integer     :: i, minIndex
 
             allocate(sorted(size(points)))
-            allocate(sorted(1)%cor(3))
-            allocate(sorted(2)%cor(3))
-            allocate(sorted(3)%cor(3))
-            allocate(sorted(4)%cor(3))
+            do i = 1, size(points)
+                allocate(sorted(i)%cor(3))
+            end do
+
             sorted = points
 
             do i = 1, size(points)
@@ -540,39 +547,26 @@ module simplex
             implicit none
 
             type(point), intent(INOUT) :: p(:)
-            type(point) :: x1, x2, x3, x4
+            type(point) :: x1, x2
 
-            integer :: n, iseed
-            real :: minx, maxx, miny, maxy, minz, maxz, ran2
+            integer :: n, iseed, i, j
+            real    ::  ran2
+            real, allocatable :: mins(:), maxs(:)
 
             n = size(p)-1
-
             x1 = p(1)
 
-            minx = x1%cor(1) - (x1%cor(1) * .2d0)
-            maxx = x1%cor(1) * 1.2d0
+            allocate(mins(n), maxs(n))
+            do i = 1, n
+                mins(i) = x1%cor(i) - (x1%cor(i) * .2d0)
+                maxs(i) = x1%cor(i) * 1.2d0
+            end do
 
-            miny = x1%cor(2) - (x1%cor(2) * .2d0)
-            maxy = x1%cor(2) * 1.2d0
+            do j = 1, n + 1
+                x2 = point([(mins(i) + ran2(iseed) *(maxs(i) - mins(i)), i=1,n)])
+                p(j) = x2
+            end do
 
-            minz = x1%cor(3) - (x1%cor(3) * .2d0)
-            maxz = x1%cor(3) * 1.2d0
-
-            x2 = point([minx + ran2(iseed)*(maxx - minx), miny + ran2(iseed)*(maxy - miny), minz + ran2(iseed)*(maxz - minz)])
-            x3 = point([minx + ran2(iseed)*(maxx - minx), miny + ran2(iseed)*(maxy - miny), minz + ran2(iseed)*(maxz - minz)])
-            x4 = point([minx + ran2(iseed)*(maxx - minx), miny + ran2(iseed)*(maxy - miny), minz + ran2(iseed)*(maxz - minz)])
-            ! x2 = point([x1%cor(1) + .005,    x1%cor(1) + .000025, x1%cor(1) + .000025]) 
-            ! x3 = point([x1%cor(1) + .000025, x1%cor(1) + .005,    x1%cor(1) + .00025]) 
-            ! x4 = point([x1%cor(1) + .000025, x1%cor(1) + .000025, x1%cor(1) + .005])
-            p = [x1, x2, x3, x4]
-            ! do i = 2, n+1
-            !     do j = 1, n
-            !         if(j == i-1 .and. x1%cor(j) /= 0.)p(i)%cor(j) = x1%cor(j) + 0.05 * x1%cor(j)
-            !         if(j == i-1 .and. x1%cor(j) == 0.)p(i)%cor(j) = 0.0075d0
-            !         if(j /= i-1)p(i)%cor(j) = x1%cor(j)
-            !     end do
-            !     p(i)%fit = fitFunc(p(i))
-            ! end do
         end subroutine restart
 
 
@@ -618,7 +612,7 @@ module simplex
 
             real, intent(IN) :: p
 
-            clamp = max(p, 1.d-5)
+            clamp = p!max(p, 1.d-5)
 
         end function clamp
 
@@ -657,6 +651,67 @@ module simplex
             print*,ps(1)%cor(:),ps(1)%fit
 
         end subroutine print_tri
+
+
+        subroutine writeOutSimplex(ps, file, stat, j)
+
+            use utils,     only : str
+            use constants, only : fileplace
+
+            implicit none
+
+            type(point),      intent(IN) :: ps(:)
+            character(len=*), intent(IN) :: stat
+            character(len=*), intent(IN) :: file
+            integer,          intent(IN) :: j
+
+            integer :: i, u
+
+            if(stat == "append")then
+                open(newunit=u,file=trim(fileplace)//trim(file), status="old", position=stat)
+            elseif(stat == "replace")then
+                open(newunit=u,file=trim(fileplace)//trim(file), status=stat)
+            else
+                print*,"Unknown option"
+                error stop
+            end if
+            
+            write(u,*)"#"//str(j)
+            do i = 1, size(ps)
+                write(u, fmt)ps(i)%cor(:),ps(i)%fit
+            end do
+            write(u,*)" "
+            write(u,*)" "
+            close(u)
+        end subroutine writeOutSimplex
+
+        subroutine logSimplexRun(ps, logfile, stat, avgevals, j)
+
+            use constants, only : fileplace
+
+            implicit none
+
+            type(point),      intent(IN) :: ps(:)
+            character(len=*), intent(IN) :: logfile, stat
+            integer,          intent(IN) :: j
+            real,             intent(IN) :: avgevals
+
+            integer :: u
+
+            if(stat == "append")then
+                open(newunit=u,file=trim(fileplace)//trim(logfile), status="old", position=stat)
+            elseif(stat == "replace")then
+                open(newunit=u,file=trim(fileplace)//trim(logfile), status=stat)
+            else
+                print*,"Unknown option"
+                error stop
+            end if
+
+            write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")j,sizeOf(ps), ps(1)%fit,avgfit(ps),avgevals
+            close(u)
+
+
+        end subroutine logSimplexRun
 
 
         subroutine readfile(filename, array)

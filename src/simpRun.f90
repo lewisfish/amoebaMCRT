@@ -17,8 +17,8 @@ program simpRunner
     real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB, targetFit=0.04d0
     character(len=50) :: file, logfile
 
-    file = "bannana-thesis.dat"
-    logfile = "log-bannana-thesis.dat"
+    file = "himmelblau-thesis.dat"
+    logfile = "log-himmelblau-thesis.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -27,14 +27,31 @@ program simpRunner
     sizebool = .false.
     fitbool = .false.
     N = 2
-    call init_simplex(N, points, func)
+    call init_simplex(N, points, himmelblau)
 
 
-    !for bannana func 2D
-    x1 = point([-1d0, 2.d0])
-    x2 = point([-.5d0, 2d0])
-    x3 = point([-1.d0, 1.d0])
+    ! for bannana func 2D
+    ! x1 = point([-1d0, 2.d0])
+    ! x2 = point([-.5d0, 2d0])
+    ! x3 = point([-1.d0, 1.d0])
+    ! points = [x1, x2, x3]
+
+    !for sphere func 2D
+    ! x1 = point([-1d0, 2.d0])
+    ! x2 = point([-.5d0, 2d0])
+    ! x3 = point([-1.d0, 1.d0])
+    ! points = [x1, x2, x3]
+
+
+    !for himmelblau func 2D
+    x1 = point([-3d0, -4.d0])
+    x2 = point([-2d0, -2d0])
+    x3 = point([0.d0, -2.d0])
     points = [x1, x2, x3]
+
+    ! x0 = np.array([-3, -4])
+    ! x1 = np.array([-2, -2])
+    ! x2 = np.array([0, -2])
 
     !for bannana func 3D
     ! x1 = point([-3., -3., -3.])
@@ -43,7 +60,7 @@ program simpRunner
     call directory()
     call reader1()
 
-    call readfile(trim(fileplace)//'target.dat', tar)
+    ! call readfile(trim(fileplace)//'target.dat', tar)
 
     totalevals = 0
     minfit = 1000000.d0
@@ -86,19 +103,8 @@ program simpRunner
 
 
     if(id == 0)then
-        open(newunit=u,file=trim(fileplace)//trim(file), status="replace")
-        write(u,*)"#0"
-        write(u,"(3ES14.4,1x,F9.5)")points(1)%cor(:),points(1)%fit
-        write(u,"(3ES14.4,1x,F9.5)")points(2)%cor(:),points(2)%fit
-        write(u,"(3ES14.4,1x,F9.5)")points(3)%cor(:),points(3)%fit
-        write(u,"(3ES14.4,1x,F9.5)")points(4)%cor(:),points(4)%fit
-        write(u,*)" "
-        write(u,*)" "
-        close(u)
-
-        open(newunit=u,file=trim(fileplace)//trim(logfile),status="replace")
-        write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")0, sizeof(points), points(1)%fit, avgfit(points), 0.0
-        close(u)
+        call writeOutsimplex(points, trim(file), "replace", 0)
+        call logSimplexRun(points, trim(logfile), "replace", 0., 0)
     end if
     i = 1
     do
@@ -111,21 +117,10 @@ program simpRunner
         if(id == 0)then
             print*," "
             print*,"           x         y         z        fit      time    mc-evals    avg-evals"
-            print("(a,5F10.5,4x,I2,9x,F5.2,I4.1)"),"Best:",points(1)%cor(:),points(1)%fit,finish-start,evals,&
+            print("(a,4F10.5,4x,I2,9x,F5.2,I4.1)"),"Best:",points(1)%cor(:),points(1)%fit,finish-start,evals,&
                                                                real(totalevals) / real(i), i
-            open(newunit=u,file=trim(fileplace)//trim(file),position="append")
-            write(u,*)"#"//str(i)
-            write(u,"(3ES14.4,1x,F9.5)")points(1)%cor(:),points(1)%fit
-            write(u,"(3ES14.4,1x,F9.5)")points(2)%cor(:),points(2)%fit
-            write(u,"(3ES14.4,1x,F9.5)")points(3)%cor(:),points(3)%fit
-            write(u,"(3ES14.4,1x,F9.5)")points(4)%cor(:),points(4)%fit
-            write(u,*)" "
-            write(u,*)" "
-            close(u)
-
-            open(newunit=u,file=trim(fileplace)//trim(logfile),position="append")
-        write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")i, sizeof(points),points(1)%fit,avgfit(points),real(totalevals)/real(i)
-            close(u)
+            call writeOutsimplex(points, trim(file), "append", i)
+            call logSimplexRun(points, trim(logfile), "append", real(totalevals) / real(i), i)
         end if
         if(convergance(points))sizebool = .true.
         if(minfit < targetFit)fitbool = .true.
@@ -162,7 +157,7 @@ program simpRunner
             print*,"Did not converge after 1000 iterations"
         end if
         print*,"i     x          y          z          avg evals   total evals"
-        print("(I5.1,1x,4F10.5,9x,I5.1)"),i,points(1)%cor(:), real(totalevals) / real(i), totalevals
+        print("(I5.1,1x,3F10.5,9x,I5.1)"),i,points(1)%cor(:), real(totalevals) / real(i), totalevals
     end if
 
     call mpi_finalize()
