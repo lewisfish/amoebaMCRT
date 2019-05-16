@@ -129,6 +129,28 @@ module simplex
         end function func
 
 
+        real function himmelblau(p)
+
+            implicit none
+
+            type(point), intent(IN) :: p
+
+            himmelblau = (p%cor(1)**2 + p%cor(2) - 11.d0)**2 + (p%cor(1) + p%cor(2)**2 - 7.d0)*2 
+
+        end function himmelblau
+
+
+        real function sphere(p)
+
+            implicit none
+
+            type(point), intent(IN) :: p
+
+            sphere = p%cor(1)**2 + p%cor(2)**2
+
+        end function sphere
+
+
         real function threeDRosenbrock(p)
 
             implicit none

@@ -12,13 +12,13 @@ program simpRunner
 
     type(point),allocatable    :: points(:)
     type(point) :: x1, x2, x3, x4
-    integer        :: i, u, evals, totalevals, N, seed
+    integer        :: i, u, evals, totalevals, N, seed, stagnate=0
     logical        :: debug=.true., fitbool, sizebool
-    real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB
-    character(len=14) :: file, logfile
+    real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB, targetFit=0.04d0
+    character(len=50) :: file, logfile
 
-    file = "four-6.dat"
-    logfile = "log-four-6.dat"
+    file = "bannana-thesis.dat"
+    logfile = "log-bannana-thesis.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -26,15 +26,15 @@ program simpRunner
 
     sizebool = .false.
     fitbool = .false.
-    N = 3
-    call init_simplex(N, points, fitness)
+    N = 2
+    call init_simplex(N, points, func)
 
 
     !for bannana func 2D
-    ! x1 = point([-1d0, 2.d0])
-    ! x2 = point([-.5d0, 2d0])
-    ! x3 = point([-1.d0, 1.d0])
-    ! points = [x1, x2, x3]
+    x1 = point([-1d0, 2.d0])
+    x2 = point([-.5d0, 2d0])
+    x3 = point([-1.d0, 1.d0])
+    points = [x1, x2, x3]
 
     !for bannana func 3D
     ! x1 = point([-3., -3., -3.])
@@ -50,13 +50,13 @@ program simpRunner
 
     if(n > 2)then
     !     !Implementing the Nelder-Mead simplex algorithm with adaptive parameters. F. Gao et al (2012)
-        tol = 1.d-7
+        tol = 2.d-5
         alpha = 1.d0
         beta  = 0.75d0 - 1.d0/(2.d0*real(n))
         gamma = 1.d0 + 2.d0/real(n)
         delta = 1.d0 - 1.d0/real(n)
     else
-        tol   = 1d-7    !tolerance value
+        tol   = 2.d-5    !tolerance value
         alpha = 1.d0    !reflection  coeff (alpha)
         beta  = 0.5d0   !contraction coeff (rho)
         gamma = 2.d0    !expansion   coeff (gamma)
@@ -64,19 +64,19 @@ program simpRunner
     end if
 
     !concs = [1.05d-6, 5.25d-4, 1.25d-4]
-    x1 = point([1.05d-6, 5.25d-4, 1.25d-4])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
-    xvarB = x1%cor(1) * .25d0
-    yvarB = x1%cor(2) * .25d0
-    zvarB = x1%cor(3) * .25d0
-    xvars = x1%cor(1) * .05d0
-    yvars = x1%cor(2) * .05d0
-    zvars = x1%cor(3) * .05d0
+    ! x1 = point([1.05d-6, 5.25d-4, 1.25d-4])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
+    ! xvarB = x1%cor(1) * .25d0
+    ! yvarB = x1%cor(2) * .25d0
+    ! zvarB = x1%cor(3) * .25d0
+    ! xvars = x1%cor(1) * .05d0
+    ! yvars = x1%cor(2) * .05d0
+    ! zvars = x1%cor(3) * .05d0
 
 
-    x2 = point([x1%cor(1) + xvarB, x1%cor(2) + yvarS, x1%cor(3) + zvarS]) 
-    x3 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarB, x1%cor(3) + zvarS]) 
-    x4 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarS, x1%cor(3) + zvarB]) 
-    points = [x1, x2, x3, x4]
+    ! x2 = point([x1%cor(1) + xvarB, x1%cor(2) + yvarS, x1%cor(3) + zvarS]) 
+    ! x3 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarB, x1%cor(3) + zvarS]) 
+    ! x4 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarS, x1%cor(3) + zvarB]) 
+    ! points = [x1, x2, x3, x4]
 
    ! x1 = point([5.6872390137768913d-5, 0.17048350623394193, 5.6788648669261477d-3], 0.32545115121224849)     
    ! x2 = point([5.6876562984908044d-5, 0.17041410926297654, 5.6785576881088077d-3], 0.32566931037246433)     
@@ -124,16 +124,16 @@ program simpRunner
             close(u)
 
             open(newunit=u,file=trim(fileplace)//trim(logfile),position="append")
-            write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")i, sizeof(points), points(1)%fit, avgfit(points), real(totalevals)/ real(i)
+        write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")i, sizeof(points),points(1)%fit,avgfit(points),real(totalevals)/real(i)
             close(u)
         end if
         if(convergance(points))sizebool = .true.
-        if(minfit < .04d0)fitbool = .true.
+        if(minfit < targetFit)fitbool = .true.
         if(i >= 1000)exit
          ! "no convergence"
         i = i + 1
 
-        if(sizebool .or. fitbool)then
+        if(sizebool)then
             if(factorialtest(points))then
                 if(id == 0)print*,"***********************************restart*********************************",sizebool,fitbool
                 call restart(points, seed)
@@ -142,6 +142,12 @@ program simpRunner
             else
                 exit
             end if
+        end if
+        if(fitbool)then
+            stagnate = stagnate + 1
+            if(stagnate > 10)exit
+            targetFit = targetFit / 10.d0
+            fitbool = .false.
         end if
     end do
 
