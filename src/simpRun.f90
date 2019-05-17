@@ -17,8 +17,8 @@ program simpRunner
     real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB, targetFit=0.04d0
     character(len=50) :: file, logfile
 
-    file = "himmelblau-thesis.dat"
-    logfile = "log-himmelblau-thesis.dat"
+    file = "ackley-thesis.dat"
+    logfile = "log-ackley-thesis.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -27,7 +27,7 @@ program simpRunner
     sizebool = .false.
     fitbool = .false.
     N = 2
-    call init_simplex(N, points, himmelblau)
+    call init_simplex(N, points, ackley)
 
 
     ! for bannana func 2D
@@ -44,7 +44,7 @@ program simpRunner
 
 
     !for himmelblau func 2D
-    x1 = point([-3d0, -4.d0])
+    x1 = point([-1d0, -1.d0])
     x2 = point([-2d0, -2d0])
     x3 = point([0.d0, -2.d0])
     points = [x1, x2, x3]

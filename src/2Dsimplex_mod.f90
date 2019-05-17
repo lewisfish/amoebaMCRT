@@ -158,6 +158,18 @@ module simplex
         end function sphere
 
 
+        real function ackley(ps)
+
+            implicit none
+
+            type(point), intent(IN) :: ps
+
+            ackley = -20.d0*exp(-0.2d0*sqrt(0.5d0*(ps%cor(1)**2 + ps%cor(2)**2))) - &
+                            exp(0.5d0*(cos(2.d0*pi*ps%cor(1)) + cos(2.d0*pi*ps%cor(2)))) + exp(1.d0) + 20.d0
+
+        end function ackley
+
+
         real function threeDRosenbrock(p)
 
             implicit none
