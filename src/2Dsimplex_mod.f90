@@ -72,9 +72,9 @@ module simplex
             end do
 
             if(n == 2)then
-                fmt = "(2ES14.4,1x,F9.5)"
+                fmt = "(2ES1417.10,1x,F9.5)"
             elseif(n == 3)then
-                fmt = "(3ES14.4,1x,F9.5)"
+                fmt = "(3ES1417.10,1x,F9.5)"
             end if
 
         end subroutine init_simplex
@@ -566,6 +566,7 @@ module simplex
             real, allocatable :: mins(:), maxs(:)
 
             n = size(p)-1
+            call sort(p)
             x1 = p(1)
 
             allocate(mins(n), maxs(n))
@@ -696,6 +697,7 @@ module simplex
             write(u,*)" "
             close(u)
         end subroutine writeOutSimplex
+
 
         subroutine logSimplexRun(ps, logfile, stat, avgevals, j)
 

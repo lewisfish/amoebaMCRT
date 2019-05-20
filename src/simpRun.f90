@@ -26,9 +26,8 @@ program simpRunner
 
     sizebool = .false.
     fitbool = .false.
-    N = 2
-    call init_simplex(N, points, ackley)
-
+    N = 3
+    call init_simplex(N, points, fitness)
 
     ! for bannana func 2D
     ! x1 = point([-1d0, 2.d0])
@@ -44,10 +43,10 @@ program simpRunner
 
 
     !for himmelblau func 2D
-    x1 = point([-1d0, -1.d0])
-    x2 = point([-2d0, -2d0])
-    x3 = point([0.d0, -2.d0])
-    points = [x1, x2, x3]
+    ! x1 = point([-1d0, -1.d0])
+    ! x2 = point([-2d0, -2d0])
+    ! x3 = point([0.d0, -2.d0])
+    ! points = [x1, x2, x3]
 
     ! x0 = np.array([-3, -4])
     ! x1 = np.array([-2, -2])
@@ -60,7 +59,7 @@ program simpRunner
     call directory()
     call reader1()
 
-    ! call readfile(trim(fileplace)//'target.dat', tar)
+    call readfile(trim(fileplace)//'target.dat', tar)
 
     totalevals = 0
     minfit = 1000000.d0
@@ -81,7 +80,7 @@ program simpRunner
     end if
 
     !concs = [1.05d-6, 5.25d-4, 1.25d-4]
-    ! x1 = point([1.05d-6, 5.25d-4, 1.25d-4])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
+    ! x1 = point([4.3949d-7, 9.8206d-5, 3.7276d-5])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
     ! xvarB = x1%cor(1) * .25d0
     ! yvarB = x1%cor(2) * .25d0
     ! zvarB = x1%cor(3) * .25d0
@@ -95,12 +94,11 @@ program simpRunner
     ! x4 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarS, x1%cor(3) + zvarB]) 
     ! points = [x1, x2, x3, x4]
 
-   ! x1 = point([5.6872390137768913d-5, 0.17048350623394193, 5.6788648669261477d-3], 0.32545115121224849)     
-   ! x2 = point([5.6876562984908044d-5, 0.17041410926297654, 5.6785576881088077d-3], 0.32566931037246433)     
-   ! x3 = point([5.6880833104982147d-5, 0.17042462144084228, 5.6787173738812183d-3], 0.32574177401309296)     
-   ! x4 = point([5.6874412587426177d-5, 0.17043360323043635, 5.6790492284025567d-3], 0.32507762904476084)     
-   ! points = [x1, x2, x3, x4]
-
+    x1 = point([4.3949E-07, 9.8206E-05, 3.7276E-05], 1.60817d0)
+    x2 = point([5.4936E-07, 1.0312E-04, 3.9140E-05], 3.21666d0)
+    x3 = point([4.6146E-07, 1.2276E-04, 3.9140E-05], 3.09660d0)
+    x4 = point([4.6146E-07, 1.0312E-04, 4.6595E-05], 1.82877d0)
+    points = [x1, x2, x3, x4]
 
     if(id == 0)then
         call writeOutsimplex(points, trim(file), "replace", 0)
@@ -117,7 +115,7 @@ program simpRunner
         if(id == 0)then
             print*," "
             print*,"           x         y         z        fit      time    mc-evals    avg-evals"
-            print("(a,4F10.5,4x,I2,9x,F5.2,I4.1)"),"Best:",points(1)%cor(:),points(1)%fit,finish-start,evals,&
+            print("(a,5F10.5,4x,I2,9x,F5.2,I4.1)"),"Best:",points(1)%cor(:),points(1)%fit,finish-start,evals,&
                                                                real(totalevals) / real(i), i
             call writeOutsimplex(points, trim(file), "append", i)
             call logSimplexRun(points, trim(logfile), "append", real(totalevals) / real(i), i)
@@ -139,10 +137,11 @@ program simpRunner
             end if
         end if
         if(fitbool)then
-            stagnate = stagnate + 1
-            if(stagnate > 10)exit
-            targetFit = targetFit / 10.d0
-            fitbool = .false.
+            ! stagnate = stagnate + 1
+            ! if(stagnate > 10)
+            exit
+            ! if(stagnate == 1)thentargetFit = targetFit / 10.d0
+            ! fitbool = .false.
         end if
     end do
 

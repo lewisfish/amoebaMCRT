@@ -1,6 +1,6 @@
 ifeq ($(FCOMP),mpifort)
 FCFLAGS = -freal-4-real-8 -O2
-FCDEBUG = -g -fbacktrace -fcheck=all -fbounds-check -ffpe-trap=invalid,overflow,underflow,denormal
+FCDEBUG = -g -fbacktrace -fcheck=all -fbounds-check# -ffpe-trap=invalid,overflow,underflow,denormal
 FCBUILD = -Wall -Wextra -pedantic -std=f2008
 else ifeq ($(FCOMP),mpiifort)
 FCFLAGS = -O2 -xHOST -r8 
