@@ -575,8 +575,8 @@ module simplex
                 maxs(i) = x1%cor(i) * 1.2d0
             end do
 
-            do j = 1, n + 1
-                x2 = point([(mins(i) + ran2(iseed) *(maxs(i) - mins(i)), i=1,n)])
+            do j = 2, n + 1
+                x2 = point([(mins(i) + ran2(iseed) * (maxs(i) - mins(i)), i=1,n)])
                 p(j) = x2
             end do
 
