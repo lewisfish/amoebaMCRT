@@ -142,7 +142,7 @@ Module absorbers
 
             real, intent(IN) :: wave
 
-            Eumel = 6.6*10.**11. * wave**(-3.33) !in cm-1
+            Eumel = 6.6d0*(10.d0**(11.)) * wave**(-3.33) !in cm-1
 
         end function Eumel
 

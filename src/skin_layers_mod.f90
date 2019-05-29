@@ -14,7 +14,7 @@ module skin_layers
             use absorbers,    only : base, water, carotene, fat, bilirubin, Eumel, Pheomel, Deoxy_Hb, Oxy_Hb
             use opt_prop,     only : hgg
             use iarray,       only : conc
-            use fluorophores, only : fluro!: nadh, fad!, tyrosine
+            use fluorophores, only : fluro
 
             implicit none
 
@@ -24,15 +24,15 @@ module skin_layers
 
             integer :: i
             real :: stratum(2), a, bdash, fray
-            real :: mua, mus_r, mus_m, mus, W, Baseline
+            real :: mua, mus_r, mus_m, mus, W
 
             if(wave >= 100.0d0)then
 
                 !set mua
-                W        = 0.05d0      !water level
-                Baseline = 0.d0 
-                mua = ((0.1d0 - 0.3d-4*wave) + 0.125d0*wave/10.d0*base(wave))*(1.d0 - W) + W*water(wave)
-                
+                W   = 0.05d0      !water level
+
+                mua = ((0.1d0 - 0.3d-4*wave) + (0.125d0*(wave/10.d0))*base(wave))*(1.d0 - W) + W*water(wave)
+
                 !set fluorophores
                 do i = 1, size(f_array)
                     mua = mua + ln10 * (f_array(i)%getFluroWave(wave) * conc(zcell, i))
@@ -42,7 +42,7 @@ module skin_layers
                 ! formula from Jac13
                 a     = 66.7d0
                 fray  = .29d0
-                bdash     = .689d0
+                bdash = .69d0
                 mus_r = fray*(wave/500.d0)**(-4.)
                 mus_m = (1.d0 - fray)*(wave/500.d0)**(-bdash)
                 mus   = a * (mus_r + mus_m)
@@ -76,21 +76,17 @@ module skin_layers
             integer :: i
             real :: Epidermis(2), a, bdash, fray
             real :: mua, mus, mus_r, mus_m
-            real :: nu_m , W, S, B, baseline
-            real :: C_bili, C_caro
+            real :: nu_m , W
+            real :: C_caro
 
             if(wave .ge. 100.d0)then
                 !set mua
-                nu_m     = .01d0
+                nu_m     = 1.d0 / 100.d0
                 W        = 0.20d0     !water level
-                S        = 0.75d0     !Blood oxygenation
-                B        = 0.0d0      !blood fraction
                 C_caro   = 2.1d-4
-                C_bili   = 0.0d0
-                Baseline = 0.3d0 
 
-                mua = (nu_m * (Eumel(wave) + Pheomel(wave)) + (1.d0 - nu_m) * (ln10*C_caro*carotene(wave) + (1.d0-C_caro)*&
-                       base(wave))) * (1.d0 - w) + w*water(wave)
+                mua = (nu_m * (eumel(wave) + pheomel(wave)) + (base(wave) + ln10 * carotene(wave) * C_caro) * (1. - nu_m)) *&
+                      (1. - W) + W * water(wave)
 
                 !set fluorophores
                 do i = 1, size(f_array)
@@ -102,7 +98,7 @@ module skin_layers
                 ! formula from Jac13
                 a     = 66.7d0
                 fray  = 0.29d0
-                bdash = 0.689d0
+                bdash = 0.69d0
                 mus_r = fray*(wave/500.d0)**(-4.)
                 mus_m = (1.d0 - fray)*(wave/500.d0)**(-bdash)
                 mus   = a * (mus_r + mus_m)
@@ -131,28 +127,26 @@ module skin_layers
             implicit none
 
             type(fluro), intent(IN) :: f_array(:)
-            real,        intent(IN)    :: wave
+            real,        intent(IN) :: wave
             integer,     intent(IN) :: zcell
 
-            real    :: Pap_dermis(2), C_bili, C_caro, nu_m, mus_m, mus_r
-            real    :: mua, mus, a, fray, bdash,  W, S, B, baseline
+            real    :: Pap_dermis(2), C_bili, C_caro, mus_m, mus_r
+            real    :: mua, mus, a, fray, bdash,  W, S, B
             integer :: i
 
             if(wave .ge. 100.d0)then
                 !set mua
-                nu_m     = 0.0d0
                 W        = 0.5d0      !water level
                 S        = 0.75d0     !Blood oxygenation
                 B        = blood_pap  !blood fraction
                 C_caro   = 7.0d-5
                 C_bili   = 0.05d0
-                Baseline = 0.3d0
 
 
-                mua = (B * (Oxy_Hb(wave) * S + Deoxy_Hb(wave) * (1.d0 - S) + ln10 * C_caro * carotene(wave) +&
-                           ln10 * C_bili * bilirubin(wave)) + base(wave)*(1.d0 - B)) * (1.d0-W)+w*water(wave)
+                mua = ((S * Oxy_Hb(wave) + (1. - S) * Deoxy_Hb(wave) + ln10 * carotene(wave) * C_caro +ln10 * bilirubin(wave)*.05)*&
+                       B + base(wave) * (1. - B)) * (1. - W) + W * Water(wave)
 
-                
+
                 !set fluorophores
                 do i = 1, size(f_array)
                     mua = mua + ln10 * (f_array(i)%getFluroWave(wave) * conc(zcell, i))
@@ -193,21 +187,19 @@ module skin_layers
             real,        intent(IN) :: wave
 
             integer :: i
-            real    :: mua, mus, a, fray, bdash,  W, S, B, baseline
-            real    :: C_bili, C_caro, nu_m, Ret_dermis(2), mus_r, mus_m
+            real    :: mua, mus, a, fray, bdash,  W, S, B
+            real    :: C_bili, C_caro, Ret_dermis(2), mus_r, mus_m
 
             if(wave .ge. 100.d0)then
                 !set mua
-                nu_m     = 0.0d0
                 W        = 0.7d0      !water level
                 S        = 0.75d0     !Blood oxygenation
                 B        = blood_ret  !blood fraction
                 C_caro   = 7.0d-5
                 C_bili   = 0.05d0
-                Baseline = 0.3d0
 
-                mua = (B * (Oxy_Hb(wave) * S + Deoxy_Hb(wave) * (1.d0 - S) + ln10 * C_caro * carotene(wave) +&
-                           ln10 * C_bili * bilirubin(wave)) + base(wave)*(1.d0 - B)) * (1.d0-W)+w*water(wave)
+                mua = ((S * Oxy_Hb(wave) + (1. - S) * Deoxy_Hb(wave) + ln10 * carotene(wave) * C_caro + bilirubin(wave) * C_bili) *&
+                       B + base(wave) * (1. - B)) * (1. - W) + W * Water(wave)
 
                 !set fluorophores
                 do i = 1, size(f_array)
@@ -250,21 +242,16 @@ module skin_layers
             integer,     intent(IN) :: zcell
 
             integer :: i
-            real    :: hypo_dermis(2), C_bili, C_caro, nu_m
-            real    :: mua, mus, W, S, B, baseline
+            real    :: hypo_dermis(2)
+            real    :: mua, mus, W, S, B
 
             if(wave .ge. 100.d0)then
                 !set mua
-                nu_m     = 0.0d0
                 W        = 0.7d0      !water level
                 S        = 0.75d0     !Blood oxygenation
-                B        = blood_hypo !blood fraction
-                C_caro   = 0.0d0
-                C_bili   = 0.0d0
-                Baseline = 0.3d0
+                B        = blood_hypo !blood_hypo !blood fraction
 
-                mua = (B * (Oxy_Hb(wave) * S + Deoxy_Hb(wave) * (1.d0 - S) + ln10 * C_caro * carotene(wave) +&
-                           ln10 * C_bili * bilirubin(wave)) + base(wave)*(1.d0 - B)) * (1.d0-W) + w*water(wave) 
+                mua = ((S * Oxy_Hb(wave) + (1. - S) * DeOxy_Hb(wave)) * B + base(wave) * (1. - B)) * (1. - W) + W * water(wave)
 
                 !set mus
                 mus = 1050.6d0 * wave**(-0.68) !in cm-1

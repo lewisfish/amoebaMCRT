@@ -41,7 +41,7 @@ module ch_opt
             !Hypodermis
             alb_kap = Hypo_Dermis(f_array, wave, hypo_range(1))
             rhokap(hypo_range(1):hypo_range(2)) = alb_kap(2)
-            albedo(hypo_range(1):hypo_range(2)) = alb_kap(1) 
+            albedo(hypo_range(1):hypo_range(2)) = alb_kap(1)
         end subroutine opt_set
 
 
@@ -144,7 +144,7 @@ module ch_opt
                  status="replace")
             open(newunit=w,file=trim(fileplace)//'epidermis-'//str(a)//"-"//str(s)//"-"//str(d)//'.dat',&
                  status="replace")
-            open(newunit=e,file=trim(fileplace)//'paPillary-'//str(a)//"-"//str(s)//"-"//str(d)//'.dat',&
+            open(newunit=e,file=trim(fileplace)//'papillary-'//str(a)//"-"//str(s)//"-"//str(d)//'.dat',&
                  status="replace")
             open(newunit=r,file=trim(fileplace)//'reticular-'//str(a)//"-"//str(s)//"-"//str(d)//'.dat',&
                  status="replace")
@@ -153,7 +153,7 @@ module ch_opt
 
             !writes out wavelength, mua, mus
 
-            do i = 300, 700
+            do i = 280, 1000
                 tmp = stratum(f_array, real(i), 500)
                 mua = tmp(2) - tmp(1)*tmp(2)
                 mus =  tmp(1)*tmp(2)

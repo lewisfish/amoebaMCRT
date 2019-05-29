@@ -35,15 +35,15 @@ module monte
         type(mpi_comm), intent(IN)  :: comm
         logical,        intent(IN)  :: pflag
 
-        integer :: q, w, e, i
+        integer :: q, w, e, i, cnt1=0, cnt2=0, cnt3=0
         integer :: nphotons, jseed, j, xcell, ycell, zcell, fluro_img(1000,3), fluroglobal(1000,3)
         logical :: tflag
-        real    :: ran, delta, start, finish, wave_in, ran2
+        real    :: ran, delta, start, finish, wave_in, ran2, rtmp, nscatt, nscattglobal, img(250,250), imgglobal(250,250)
         character(len=256) :: paramsFile
         type(fluro), allocatable :: f_array(:)
 
         !mpi variables
-        real    :: finish2, tmp, mu_tot, mua_skin
+        real    :: finish2, tmp, mu_tot, mua_skin, tot_skin
 
         !allocate and set arrays to 0
         call alloc_array(numproc)
@@ -98,7 +98,7 @@ module monte
         fluroglobal = 0
         do j = 1, nphotons
 
-            e = 1
+            e = 0
             wave = wave_in
             f_array(:)%bool = .false.
             hgg = gethgg(wave)
@@ -140,6 +140,7 @@ module monte
 
                 mua_skin = rhokap(zcell) - albedo(zcell)
                 mu_tot  = albedo(zcell) + mua_skin
+                tot_skin = mu_tot
 
                 do i = 1, size(f_array)
                     f_array(i)%mua = ln10 * f_array(i)%getFluroWave(wave) * conc(zcell, i)
@@ -147,11 +148,19 @@ module monte
                 end do
 
                 ran = ran2(jseed)
-
-                if(ran < f_array(1)%mua / mu_tot)then
+                if(ran < (tot_skin) / mu_tot)then
+                    if(ran2(jseed) < albedo(zcell))then
+                        !do scatter
+                        call stokes(jseed)
+                        nscatt = nscatt + 1.
+                    else
+                        tflag= .true.
+                        exit
+                    end if
+                elseif(ran < (f_array(1)%mua + tot_skin) / mu_tot)then
                     !do nadh
                     call sample(f_array(1)%emission, f_array(1)%cdf, wave, jseed)
-                     call opt_set(wave, f_array)
+                    call opt_set(wave, f_array)
                     f_array(1)%bool = .true.
                     e = 1
                     f_array(2:)%bool = .false.
@@ -160,7 +169,8 @@ module monte
                     call stokes(jseed)
                     hgg = gethgg(wave)
                     g2 = hgg**2
-                elseif(ran < (f_array(1)%mua + f_array(2)%mua)/ mu_tot)then
+                    cnt1 = cnt1 + 1
+                elseif(ran < (f_array(1)%mua + f_array(2)%mua + tot_skin)/ mu_tot)then
                     !do fad
                     call sample(f_array(2)%emission, f_array(2)%cdf,wave, jseed)
                     call opt_set(wave, f_array)
@@ -173,7 +183,8 @@ module monte
                     call stokes(jseed)
                     hgg = gethgg(wave)
                     g2 = hgg**2 
-                elseif(ran < (f_array(1)%mua + f_array(2)%mua + f_array(3)%mua)/ mu_tot)then
+                    cnt2 = cnt2 + 1
+                elseif(ran < (f_array(1)%mua + f_array(2)%mua + f_array(3)%mua + tot_skin)/ mu_tot)then
                     !do ribofake
                     call sample(f_array(3)%emission, f_array(3)%cdf,wave, jseed)
                     call opt_set(wave, f_array)
@@ -186,21 +197,23 @@ module monte
                     call stokes(jseed)
                     hgg = gethgg(wave)
                     g2 = hgg**2   
-                elseif(ran < (f_array(1)%mua + f_array(2)%mua + f_array(3)%mua + albedo(zcell))/ mu_tot)then
-                    !do scatter
-                    call stokes(jseed)
+                    cnt3 = cnt3 + 1
                 else
-                    !absorb
-                    tflag=.true.
-                    exit
+                    print*,ran
+                    error stop "Error in fluro choice"
                 end if
 
                 !************ Find next scattering location
                 call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e)
 
             end do
-
-            if(tflag .and. wave /= wave_in .and. zcell == -1 .and. zp > 0.)then
+            rtmp = sqrt(xp**2 + yp**2)
+            if(tflag .and. zcell == -1 .and. zp > 0. .and. (rtmp >= .06d0 .and. rtmp <= .14d0))then
+                    if(f_array(1)%bool .or. f_array(2)%bool .or. f_array(3)%bool)then
+                        xcell=int(250.*(xp+xmax)/(2.*xmax))+1
+                        ycell=int(250.*(yp+ymax)/(2.*ymax))+1
+                        img(xcell,ycell) = img(xcell,ycell) + 1
+                    end if
                     if(f_array(1)%bool)fluro_img(nint(wave),1) = fluro_img(nint(wave),1) + 1
                     if(f_array(2)%bool)fluro_img(nint(wave),2) = fluro_img(nint(wave),2) + 1
                     if(f_array(3)%bool)fluro_img(nint(wave),3) = fluro_img(nint(wave),3) + 1
@@ -208,24 +221,19 @@ module monte
 
         end do      ! end loop over nph photons
 
-        ! allocate(jmeanGLOBAL(nxg, nyg, nzg,2))
-
+        call mpi_allreduce(nscatt, nscattglobal, 1, mpi_double_precision, mpi_sum, comm)
 
         call mpi_allreduce(fluro_img, fluroglobal, size(fluroglobal), mpi_integer, mpi_sum, comm)
         ! call mpi_allreduce(jmean, jmeanglobal, size(jmeanglobal), mpi_double_precision, mpi_sum, comm)
+        call mpi_allreduce(img, imgglobal, size(imgglobal), mpi_double_precision, mpi_sum, comm)
 
         src = fluroglobal(:,1) + fluroglobal(:,2) + fluroglobal(:,3)
-        if(id==0)print*,sum(src)
+        if(id==0)print*,sum(src),cnt1,cnt2,cnt3
 
-        ! src = src / max(real(maxval(src)), 1.)
         if(id == 0)then
 
-            ! open(newunit=j,file=trim(fileplace)//"all_out1.dat")
-            ! do i = 1, size(fluro_img,1)
-            !     write(j,*)i,fluro_img(i,:)
-            ! end do
-            ! close(j)
-            call writer(src)
+
+            call writer(src, imgglobal)
         end if
 
         call cpu_time(finish)
@@ -235,35 +243,3 @@ module monte
         call mpi_barrier(comm)
 end subroutine mcpolar
 end module monte
-
-
-
-
-                ! ! print*,ran,albedo, mu_nadh/kappa
-                ! if(ran < albedo(zcell))then!interacts with tissue
-                !     call stokes(jseed)
-                ! else
-                !     if(ran < (ln10 * NADH(wave) * conc(zcell,2))/rhokap(zcell) + albedo(zcell))then
-                !         call sample(nadh_fluro, nadh_cdf, wave, jseed)
-                !         call opt_set(wave)
-                !         nadh_bool=.true.;fad_bool=.false.;collagen_bool=.false.
-
-                !     elseif(ran < ((ln10 * NADH(wave) * conc(zcell,2)) + &
-                !                   (ln10 * fadflavin(wave) * conc(zcell,3)))/rhokap(zcell) + albedo(zcell))then
-                !         call sample(riboflavin_fluro, riboflavin_cdf, wave, jseed)
-                !         call opt_set(wave)
-                !         riboflavin_bool=.true.;nadh_bool=.false.;tyrosine_bool=.false.
-                !     elseif(ran < (ln10 * NADH(wave) * conc(zcell, 2)/rhokap(zcell)) + &
-                !                  (ln10 * riboflavin(wave) * conc(zcell,3)) + &
-                !                  (ln10 * tyrosine(wave) * conc(zcell,1)) + albedo(zcell))then
-                !         call sample(tyrosine_fluro, tyrosine_cdf, wave, jseed)
-                !         call opt_set(wave)
-                !         riboflavin_bool=.false.;nadh_bool=.false.;tyrosine_bool=.true.
-                !     else
-                !         tflag=.true.
-                !         exit
-                !     end if
-                !     hgg = 0.
-                !     call stokes(jseed)
-                !     hgg = .8
-                ! end if

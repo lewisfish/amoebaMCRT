@@ -625,7 +625,7 @@ module simplex
 
             real, intent(IN) :: p
 
-            clamp = p!max(p, 1.d-5)
+            clamp = max(p, 1.d-9)
 
         end function clamp
 

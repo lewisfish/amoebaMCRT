@@ -15,7 +15,7 @@ module sourceph_mod
 
          real :: ran2, theta, r, spotsizeradius
 
-         spotsizeradius = 0.04d0 !mm
+         spotsizeradius = 0.04d0 ! 0.4 mm
 
          zp = zmax - (1.d-5 * (2.d0*zmax/nzg))
 
@@ -28,16 +28,10 @@ module sourceph_mod
          yp = sqrt(r) * sin(theta)
 
 
-
-         ! zp = zmax - (1.e-5*(2.*zmax/nzg))
-         ! xp = xmax * (2.*ran2(iseed)-1.)
-         ! yp = ymax * (2.*ran2(iseed)-1.)
-
-
          phi = TWOPI * ran2(iseed)
          cosp = cos(phi)
          sinp = sin(phi)          
-         cost = -1.
+         cost = -1.d0 
          sint = sqrt(1. - cost**2) 
 
          nxp = sint * cosp  

@@ -107,25 +107,6 @@ module reader_mod
             !fat data
             call readfile_array2D(trim(resdir)//'fatty.dat', fat_array, 0, 2)
 
-        !     !nadh data
-        !     call readfile_array2D(trim(resdir)//'nadh.dat', nadh_array, 0, 2)
-        !     call readfile_array2D(trim(resdir)//'nadh_fluro.dat', nadh_fluro, 0, 2)   
-        !     allocate(nadh_cdf(size(nadh_fluro,1)))
-
-        !     ! call readfile_array2D(trim(resdir)//'fad.dat', FAD_array, 0, 2)
-        !     ! call readfile_array2D(trim(resdir)//'fad_fluro.dat', FAD_fluro, 0, 2)  
-        !     ! allocate(fad_cdf(size(fad_fluro,1)))
-
-        !     !madeup data
-        !     call readfile_array2D(trim(resdir)//'fad.dat', fad_array, 0, 2)
-        !     call readfile_array2D(trim(resdir)//'tyrosine_fluro.dat', fad_fluro, 0, 2)  
-        !     allocate(fad_cdf(size(fad_fluro,1)))
-
-        !     ! !collagen data
-        !     ! call readfile_array2D(trim(resdir)//'collagen.dat', collagen_array, 0, 2)
-        !     ! call readfile_array2D(trim(resdir)//'collagen_fluro.dat', collagen_fluro, 0, 2)  
-        !     ! allocate(collagen_cdf(size(collagen_fluro,1)))
-
         end subroutine reader1
 
 

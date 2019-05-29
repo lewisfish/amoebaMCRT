@@ -18,17 +18,17 @@ CONTAINS
 
    !***** isotropic scattering if g = 0.0 ******************************
    if(hgg == 0.0d0) then
-      cost=2.*ran2(iseed)-1.
-      sint=(1.-cost*cost)
-      if(sint.le.0.)then
-         sint=0.
+      cost = 2.d0 * ran2(iseed) - 1.d0
+      sint = (1.d0 - cost**2)
+      if(sint <= 0.d0)then
+         sint = 0.d0
       else
-         sint=sqrt(sint)
+         sint = sqrt(sint)
       endif
 
       phi=TWOPI*ran2(iseed)
-      sinp=sin(phi)
-      cosp=cos(phi)
+      sinp = sin(phi)
+      cosp = cos(phi)
 
       nxp=sint*cosp
       nyp=sint*sinp

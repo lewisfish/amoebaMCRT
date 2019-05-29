@@ -83,11 +83,11 @@ implicit none
             ! inquire(iolength=i)rhokap(:)
             ! call chck_mem(cnt, i, limit, 'rhokap', numproc)
 
-            ! allocate(jmean(nxg, nyg, nzg,3))
+            ! allocate(jmean(nxg, nyg, nzg,0:3))
             ! inquire(iolength=i)jmean(:,:,:,:)
             ! call chck_mem(cnt, i, limit, 'jmean', numproc)
 
-            ! allocate(jmeanGLOBAL(nxg, nyg, nzg,3))
+            ! allocate(jmeanGLOBAL(nxg, nyg, nzg,0:3))
             ! inquire(iolength=i)jmeanGLOBAL(:,:,:,:)
             ! call chck_mem(cnt, i, limit, 'jmeanGLOBAL', numproc)
 
