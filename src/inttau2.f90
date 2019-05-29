@@ -7,14 +7,15 @@ module inttau2
 
 CONTAINS
 
-    subroutine tauint1(xcell,ycell,zcell,tflag,iseed,delta, id,j)
+    subroutine tauint1(xcell,ycell,zcell,tflag,iseed,delta, id,j,tauin)
     !optical depth integration subroutine
     !
     !
-        use constants,   only : xmax, ymax, zmax
-        use photon_vars, only : xp, yp, zp
-        use iarray,      only : rhokap
+        use constants,    only : xmax, ymax, zmax
+        use photon_vars,  only : xp, yp, zp, nxp, nyp, nzp
+        use iarray,       only : rhokap, jmean
         use fluorophores, only : fluro
+        use trackPacket,  only : stack, trackPhoton, tracker, point
 
         use vector_class
    
@@ -22,8 +23,9 @@ CONTAINS
 
         real,    intent(IN)    :: delta
         integer, intent(INOUT) :: xcell, ycell, zcell, iseed
-        integer, intent(IN) :: id,j
+        integer, intent(IN)    :: id,j
         logical, intent(INOUT) :: tflag
+        real, optional, intent(IN) :: tauin
 
         real                   :: tau, taurun, taucell, xcur, ycur, zcur, d, dcell, ran2
         integer                :: celli, cellj, cellk
@@ -40,26 +42,32 @@ CONTAINS
         taurun = 0.
         d = 0.
         dir = (/.FALSE., .FALSE., .FALSE./)
+        if(j == 4)then
+            tau = tauin
+            if(zcur == 0.5d0)return
+        else
+            tau = -log(ran2(iseed))
+        end if
 
-        tau = -log(ran2(iseed))
         do
             dir = (/.FALSE., .FALSE., .FALSE./)
             dcell = wall_dist(celli, cellj, cellk, xcur, ycur, zcur, dir)
             taucell = dcell * rhokap(cellk)
-
             if(taurun + taucell < tau)then
                 taurun = taurun + taucell
                 d = d + dcell
-
-                ! jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
+                if(j == 4)then
+                    jmean(celli,cellj,cellk) = jmean(celli,cellj,cellk) + dcell
+                end if
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .TRUE., dir, delta, tflag, iseed, &
                                 tau, taurun)
             else
 
                 dcell = (tau - taurun) / rhokap(cellk)
                 d = d + dcell
-
-                ! jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
+                if(j == 4)then
+                    jmean(celli,cellj,cellk) = jmean(celli,cellj,cellk) + dcell
+                end if
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .FALSE., dir, delta, tflag, iseed, &
                                 tau, taurun)
                 exit
@@ -81,6 +89,7 @@ CONTAINS
         xp = xcur - xmax
         yp = ycur - ymax
         zp = zcur - zmax
+        if(trackPhoton)call tracker%push(point(xp, yp, zp, nxp, nyp, nzp, tau))
         xcell = celli
         ycell = cellj
         zcell = cellk

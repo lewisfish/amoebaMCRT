@@ -25,7 +25,9 @@ module monte
         use stokes_mod
         use fluorophores
         use writer_mod
-        use utils, only : str
+        use utils,       only : str
+        use trackPacket, only : tracker, trackPhoton
+        use generateFluence
 
         implicit none
 
@@ -35,7 +37,7 @@ module monte
         type(mpi_comm), intent(IN)  :: comm
         logical,        intent(IN)  :: pflag
 
-        integer :: q, w, e, i, cnt1=0, cnt2=0, cnt3=0
+        integer :: q, w, e, i, cnt1=0, cnt2=0, cnt3=0, u
         integer :: nphotons, jseed, j, xcell, ycell, zcell, fluro_img(1000,3), fluroglobal(1000,3)
         logical :: tflag
         real    :: ran, delta, start, finish, wave_in, ran2, rtmp, nscatt, nscattglobal, img(250,250), imgglobal(250,250)
@@ -51,6 +53,8 @@ module monte
         call zarray()
         src = 0.d0
         !**** Read in parameters from the file input.params
+
+
         open(10,file=trim(resdir)//'input.params',status='old')
         read(10,*) nphotons
         read(10,*) xmax
@@ -59,7 +63,13 @@ module monte
         read(10,*) n1
         read(10,*) n2
         read(10,*) paramsFile
+        read(10,*) trackPhoton
         close(10)
+
+        if(trackPhoton)then
+            open(newunit=u,file=trim(fileplace)//"photPos.dat",status="replace")
+            close(u)
+        end if
 
         !set optical properties and make cdfs.
         wave_in = 365.d0 
@@ -209,6 +219,18 @@ module monte
             end do
             rtmp = sqrt(xp**2 + yp**2)
             if(tflag .and. zcell == -1 .and. zp > 0. .and. (rtmp >= .06d0 .and. rtmp <= .14d0))then
+                !((xp - sqrt(2.)/20.)**2 + (yp - sqrt(2.)/20.)**2) <= .04**2 <- just a circle detector
+                if(trackPhoton)then
+                    open(newunit=u, file=trim(fileplace)//"photPos.dat", status="old", position="append")
+                    do while(.not. tracker%empty())
+                        write(u,"(7(F10.7,1x))")tracker%pop()
+                    end do
+                    write(u,*)" "
+                    write(u,*)" "
+                    write(u,*)" "
+                    close(u)
+                end if
+                    ! stop
                     if(f_array(1)%bool .or. f_array(2)%bool .or. f_array(3)%bool)then
                         xcell=int(250.*(xp+xmax)/(2.*xmax))+1
                         ycell=int(250.*(yp+ymax)/(2.*ymax))+1
@@ -217,6 +239,8 @@ module monte
                     if(f_array(1)%bool)fluro_img(nint(wave),1) = fluro_img(nint(wave),1) + 1
                     if(f_array(2)%bool)fluro_img(nint(wave),2) = fluro_img(nint(wave),2) + 1
                     if(f_array(3)%bool)fluro_img(nint(wave),3) = fluro_img(nint(wave),3) + 1
+            else
+                if(trackPhoton)call tracker%zero()
             end if
 
         end do      ! end loop over nph photons
@@ -232,7 +256,7 @@ module monte
 
         if(id == 0)then
 
-
+            ! call getFluenceDetectedPackets(delta, id)
             call writer(src, imgglobal)
         end if
 

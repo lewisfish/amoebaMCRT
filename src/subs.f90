@@ -35,7 +35,7 @@ implicit none
             !sets all arrays to zero
             implicit none
 
-            ! jmean = 0.
+            jmean = 0.
             xface = 0.
             yface = 0.
             zface = 0.
@@ -83,7 +83,7 @@ implicit none
             ! inquire(iolength=i)rhokap(:)
             ! call chck_mem(cnt, i, limit, 'rhokap', numproc)
 
-            ! allocate(jmean(nxg, nyg, nzg,0:3))
+            allocate(jmean(nxg, nyg, nzg))
             ! inquire(iolength=i)jmean(:,:,:,:)
             ! call chck_mem(cnt, i, limit, 'jmean', numproc)
 
