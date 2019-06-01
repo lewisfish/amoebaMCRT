@@ -7,7 +7,7 @@ module inttau2
 
 CONTAINS
 
-    subroutine tauint1(xcell,ycell,zcell,tflag,iseed,delta, id,j,tauin)
+    subroutine tauint1(xcell,ycell,zcell,tflag,iseed,delta, id,j,tauin, trackFlag)
     !optical depth integration subroutine
     !
     !
@@ -25,7 +25,9 @@ CONTAINS
         integer, intent(INOUT) :: xcell, ycell, zcell, iseed
         integer, intent(IN)    :: id,j
         logical, intent(INOUT) :: tflag
-        real, optional, intent(IN) :: tauin
+
+        real,    optional, intent(IN) :: tauin
+        logical, optional, intent(IN) :: trackFlag
 
         real                   :: tau, taurun, taucell, xcur, ycur, zcur, d, dcell, ran2
         integer                :: celli, cellj, cellk
@@ -42,7 +44,7 @@ CONTAINS
         taurun = 0.
         d = 0.
         dir = (/.FALSE., .FALSE., .FALSE./)
-        if(j == 4)then
+        if(trackFlag)then
             tau = tauin
             if(zcur == 0.5d0)return
         else
@@ -56,8 +58,8 @@ CONTAINS
             if(taurun + taucell < tau)then
                 taurun = taurun + taucell
                 d = d + dcell
-                if(j == 4)then
-                    jmean(celli,cellj,cellk) = jmean(celli,cellj,cellk) + dcell
+                if(trackFlag)then
+                    jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
                 end if
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .TRUE., dir, delta, tflag, iseed, &
                                 tau, taurun)
@@ -65,8 +67,8 @@ CONTAINS
 
                 dcell = (tau - taurun) / rhokap(cellk)
                 d = d + dcell
-                if(j == 4)then
-                    jmean(celli,cellj,cellk) = jmean(celli,cellj,cellk) + dcell
+                if(trackFlag)then
+                    jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
                 end if
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .FALSE., dir, delta, tflag, iseed, &
                                 tau, taurun)
@@ -89,7 +91,7 @@ CONTAINS
         xp = xcur - xmax
         yp = ycur - ymax
         zp = zcur - zmax
-        if(trackPhoton)call tracker%push(point(xp, yp, zp, nxp, nyp, nzp, tau))
+        if(trackPhoton)call tracker%push(point(xp, yp, zp, nxp, nyp, nzp, tau, j))
         xcell = celli
         ycell = cellj
         zcell = cellk

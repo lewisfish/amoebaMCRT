@@ -56,6 +56,7 @@ module gridset_mod
             do i = 1, nzg
                 z = zface(i)+2.*zmax/nzg
                 !distance here are converted from mm to cm.src is louise age paper
+                ! refractive indices are from mm02
                 if(z >= 2.*zmax - 0.02d-1)then
                     !Strat corenum
                     if(.not. strat_bool)then
@@ -104,7 +105,6 @@ module gridset_mod
         pap_range = [pap_first, pap_last]
         ret_range = [ret_first, ret_last]
         hypo_range = [hypo_first, hypo_last]
-
 
         do i = 1, size(f_array)
             do j = 1, 5

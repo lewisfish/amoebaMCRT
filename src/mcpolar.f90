@@ -38,7 +38,7 @@ module monte
         logical,        intent(IN)  :: pflag
 
         integer :: q, w, e, i, cnt1=0, cnt2=0, cnt3=0, u
-        integer :: nphotons, jseed, j, xcell, ycell, zcell, fluro_img(1000,3), fluroglobal(1000,3)
+        integer :: nphotons, jseed, j, xcell, ycell, zcell, fluro_img(1000,3), fluroglobal(1000,3), dep(500)
         logical :: tflag
         real    :: ran, delta, start, finish, wave_in, ran2, rtmp, nscatt, nscattglobal, img(250,250), imgglobal(250,250)
         character(len=256) :: paramsFile
@@ -143,7 +143,7 @@ module monte
             call sourceph(xcell,ycell,zcell,jseed)
 
             !****** Find scattering location
-            call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e)
+            call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e, trackflag=.false.)
 
             !******** Photon scatters in grid until it exits (tflag=TRUE) 
             do while(tflag.eqv..FALSE.)
@@ -194,6 +194,7 @@ module monte
                     hgg = gethgg(wave)
                     g2 = hgg**2 
                     cnt2 = cnt2 + 1
+                    dep(zcell) = dep(zcell) + 1
                 elseif(ran < (f_array(1)%mua + f_array(2)%mua + f_array(3)%mua + tot_skin)/ mu_tot)then
                     !do ribofake
                     call sample(f_array(3)%emission, f_array(3)%cdf,wave, jseed)
@@ -214,16 +215,16 @@ module monte
                 end if
 
                 !************ Find next scattering location
-                call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e)
+                call tauint1(xcell,ycell,zcell,tflag,jseed,delta, id, e, trackflag=.false.)
 
             end do
             rtmp = sqrt(xp**2 + yp**2)
             if(tflag .and. zcell == -1 .and. zp > 0. .and. (rtmp >= .06d0 .and. rtmp <= .14d0))then
                 !((xp - sqrt(2.)/20.)**2 + (yp - sqrt(2.)/20.)**2) <= .04**2 <- just a circle detector
-                if(trackPhoton)then
+                if(trackPhoton .and. e /= 0)then
                     open(newunit=u, file=trim(fileplace)//"photPos.dat", status="old", position="append")
                     do while(.not. tracker%empty())
-                        write(u,"(7(F10.7,1x))")tracker%pop()
+                        write(u,"(7(F10.7,1x),I1)")tracker%pop()
                     end do
                     write(u,*)" "
                     write(u,*)" "
@@ -240,6 +241,7 @@ module monte
                     if(f_array(2)%bool)fluro_img(nint(wave),2) = fluro_img(nint(wave),2) + 1
                     if(f_array(3)%bool)fluro_img(nint(wave),3) = fluro_img(nint(wave),3) + 1
             else
+                !empty packet tracker of undetected photon paths
                 if(trackPhoton)call tracker%zero()
             end if
 
@@ -248,7 +250,7 @@ module monte
         call mpi_allreduce(nscatt, nscattglobal, 1, mpi_double_precision, mpi_sum, comm)
 
         call mpi_allreduce(fluro_img, fluroglobal, size(fluroglobal), mpi_integer, mpi_sum, comm)
-        ! call mpi_allreduce(jmean, jmeanglobal, size(jmeanglobal), mpi_double_precision, mpi_sum, comm)
+        call mpi_allreduce(jmean, jmeanglobal, size(jmeanglobal), mpi_double_precision, mpi_sum, comm)
         call mpi_allreduce(img, imgglobal, size(imgglobal), mpi_double_precision, mpi_sum, comm)
 
         src = fluroglobal(:,1) + fluroglobal(:,2) + fluroglobal(:,3)
@@ -256,8 +258,13 @@ module monte
 
         if(id == 0)then
 
-            ! call getFluenceDetectedPackets(delta, id)
-            call writer(src, imgglobal)
+            call getFluenceDetectedPackets(delta, id)
+            ! call writer(src, imgglobal)
+            ! open(newunit=u,file=trim(fileplace)//"stratum-fad.dat")
+            ! do e = 500, 1, -1
+            !     write(u,*)(e*2.*zmax)/real(nzg),dep(e)
+            ! end do
+            ! close(u)
         end if
 
         call cpu_time(finish)

@@ -1,8 +1,8 @@
-1000000       nphotons
+1       nphotons
 .25            xmax
 .25             ymax
 .25            zmax
 1.38             n1
 1.               n2
 fluro.params    flurofilename
-T               trackPhoton?
+F               trackPhoton?

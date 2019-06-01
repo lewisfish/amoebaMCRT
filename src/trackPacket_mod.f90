@@ -5,6 +5,7 @@ module trackPacket
     !data point
     type :: point
         real :: x, y, z, nx, ny, nz, tau
+        integer :: spec
     end type point
 
     type :: stack
@@ -52,7 +53,7 @@ module trackPacket
 
             if(this%size == 0 .or. .not. allocated(this%data))then
                 !if nothing in stack send back garbage data
-                pop_fn = point(-999d0, -999.d0, -999.d0, -9.d0, -9.d0, -9.d0, -1.)
+                pop_fn = point(-999d0, -999.d0, -999.d0, -9.d0, -9.d0, -9.d0, -1.d0, -1)
                 return
             end if
             pop_fn = this%data(this%size)
@@ -69,7 +70,7 @@ module trackPacket
 
             if (this%size == 0 .or. .not. allocated(this%data)) then
                 !if nothing in stack send back garbage data
-                peek_fn = point(-999d0, -999.d0, -999.d0, -9.d0, -9.d0, -9.d0, -1.)
+                peek_fn = point(-999d0, -999.d0, -999.d0, -9.d0, -9.d0, -9.d0, -1.d0, -1)
                 return
             end if
             peek_fn = this%data(this%size)
