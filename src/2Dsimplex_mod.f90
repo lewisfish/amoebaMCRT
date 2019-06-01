@@ -71,11 +71,9 @@ module simplex
                 points(i)%N = N
             end do
 
-            if(n == 2)then
-                fmt = "(2ES1417.10,1x,F9.5)"
-            elseif(n == 3)then
-                fmt = "(3ES1417.10,1x,F9.5)"
-            end if
+            !set format for logfiles
+            fmt = repeat(" ", 24 + mod(points(1)%N, 10))
+            write(fmt,"(a1,I2.1,a)")"(", points(1)%N, "(ES17.10,1x),1x,ES17.10)"
 
         end subroutine init_simplex
 
@@ -118,6 +116,33 @@ module simplex
             init_point_fit%fit = fit
 
         end function init_point_fit
+
+
+        subroutine genSimplex(p, tmp)
+
+            implicit none
+
+            type(point), intent(IN) :: p
+
+            integer :: i, j
+            type(point), intent(INOUT) :: tmp(:)
+
+            tmp(1) = p
+            do i = 1, p%n
+                do j = 1, p%n
+                    if(i == j)then
+                        tmp(i+1)%cor(j) = p%cor(j) + (p%cor(j) * .25d0)
+                        tmp(i+1)%fit = fitFunc(tmp(i+1))
+
+                    else
+                        tmp(i+1)%cor(j) = p%cor(j) + (p%cor(j) * .05d0)
+                        tmp(i+1)%fit = fitFunc(tmp(i+1))
+
+                    end if
+                end do
+            end do
+
+        end subroutine genSimplex
 
 
         real function func(p)
@@ -180,7 +205,7 @@ module simplex
 
             threeDRosenbrock = 0.d0
             
-            do i = 1, 3-1
+            do i = 1, 6-1
                 threeDRosenbrock = threeDRosenbrock + &
                                    (100.d0*(p%cor(i+1) - p%cor(i)**2)**2 + (1.d0 - p%cor(i))**2)
 
@@ -311,13 +336,8 @@ module simplex
 
             sums = sums / real(size(points)-1.)
 
-            if(points(1)%n == 3)then
-                getCentroid = point([sums(1), sums(2), sums(3)], 3, 1000000.d0)
-            elseif(points(1)%n == 2)then
-                getCentroid = point([sums(1), sums(2)], 2, 1000000.d0)
-            else
-                error stop "not supported :'("
-            end if
+            getCentroid = point([(sums(i), i = 1, points(1)%n)], points(1)%n, 1000000.d0)
+
         end function getCentroid
 
 
@@ -721,7 +741,7 @@ module simplex
                 error stop
             end if
 
-            write(u,"(I3.1,1x,ES14.4,1x,F9.5,1x,f9.5,1x,f9.5)")j,sizeOf(ps), ps(1)%fit,avgfit(ps),avgevals
+            write(u,"(I3.1,1x,ES14.4,1x,ES14.4,1x,ES14.4,1x,f9.5)")j,sizeOf(ps), ps(1)%fit,avgfit(ps),avgevals
             close(u)
 
 

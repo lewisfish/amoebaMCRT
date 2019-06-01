@@ -11,14 +11,15 @@ program simpRunner
     implicit none
 
     type(point),allocatable    :: points(:)
-    type(point) :: x1, x2, x3, x4
-    integer        :: i, u, evals, totalevals, N, seed, stagnate=0
-    logical        :: debug=.true., fitbool, sizebool
-    real           :: start, finish, xvars, xvarB, yvars, yvarB, zvars, zvarB, targetFit=0.04d0
+    type(point) :: x1
+    integer        :: i, evals, totalevals, N, seed
+    logical        :: debug=.false., fitbool, sizebool
+    real           :: start, finish, targetFit=0.04d0
+
     character(len=50) :: file, logfile
 
-    file = "ackley-thesis.dat"
-    logfile = "log-ackley-thesis.dat"
+    file = "6d-thesis.dat"
+    logfile = "log-6d-thesis.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -26,14 +27,13 @@ program simpRunner
 
     sizebool = .false.
     fitbool = .false.
-    N = 3
-    call init_simplex(N, points, fitness)
+    N = 6
+    call init_simplex(N, points, threeDRosenbrock)
 
     ! for bannana func 2D
-    ! x1 = point([-1d0, 2.d0])
-    ! x2 = point([-.5d0, 2d0])
-    ! x3 = point([-1.d0, 1.d0])
-    ! points = [x1, x2, x3]
+    x1 = point([-3d0, -3.d0, -3.d0, -3.d0, -3.d0, -3.d0])
+    call genSimplex(x1, points)
+
 
     !for sphere func 2D
     ! x1 = point([-1d0, 2.d0])
@@ -59,7 +59,7 @@ program simpRunner
     call directory()
     call reader1()
 
-    call readfile(trim(fileplace)//'target.dat', tar)
+    ! call readfile(trim(fileplace)//'target.dat', tar)
 
     totalevals = 0
     minfit = 1000000.d0
@@ -81,24 +81,13 @@ program simpRunner
 
     !concs = [1.05d-6, 5.25d-4, 1.25d-4]
     ! x1 = point([4.3949d-7, 9.8206d-5, 3.7276d-5])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])
-    ! xvarB = x1%cor(1) * .25d0
-    ! yvarB = x1%cor(2) * .25d0
-    ! zvarB = x1%cor(3) * .25d0
-    ! xvars = x1%cor(1) * .05d0
-    ! yvars = x1%cor(2) * .05d0
-    ! zvars = x1%cor(3) * .05d0
 
 
-    ! x2 = point([x1%cor(1) + xvarB, x1%cor(2) + yvarS, x1%cor(3) + zvarS]) 
-    ! x3 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarB, x1%cor(3) + zvarS]) 
-    ! x4 = point([x1%cor(1) + xvarS, x1%cor(2) + yvarS, x1%cor(3) + zvarB]) 
+    ! x1 = point([4.3949E-07, 9.8206E-05, 3.7276E-05], 1.60817d0)
+    ! x2 = point([5.4936E-07, 1.0312E-04, 3.9140E-05], 3.21666d0)
+    ! x3 = point([4.6146E-07, 1.2276E-04, 3.9140E-05], 3.09660d0)
+    ! x4 = point([4.6146E-07, 1.0312E-04, 4.6595E-05], 1.82877d0)
     ! points = [x1, x2, x3, x4]
-
-    x1 = point([4.3949E-07, 9.8206E-05, 3.7276E-05], 1.60817d0)
-    x2 = point([5.4936E-07, 1.0312E-04, 3.9140E-05], 3.21666d0)
-    x3 = point([4.6146E-07, 1.2276E-04, 3.9140E-05], 3.09660d0)
-    x4 = point([4.6146E-07, 1.0312E-04, 4.6595E-05], 1.82877d0)
-    points = [x1, x2, x3, x4]
 
     if(id == 0)then
         call writeOutsimplex(points, trim(file), "replace", 0)
@@ -114,16 +103,14 @@ program simpRunner
         call cpu_time(finish)
         if(id == 0)then
             print*," "
-            print*,"           x         y         z        fit      time    mc-evals    avg-evals"
-            print("(a,5F10.5,4x,I2,9x,F5.2,I4.1)"),"Best:",points(1)%cor(:),points(1)%fit,finish-start,evals,&
-                                                               real(totalevals) / real(i), i
+            print*,"      fit       time   mc-evals    avg-evals      iters"
+            print("(2F11.5,5x,I1.1,7x,F9.5,7x,I4.1)"),points(1)%fit,finish-start,evals,real(totalevals) / real(i), i
             call writeOutsimplex(points, trim(file), "append", i)
             call logSimplexRun(points, trim(logfile), "append", real(totalevals) / real(i), i)
         end if
         if(convergance(points))sizebool = .true.
         if(minfit < targetFit)fitbool = .true.
         if(i >= 1000)exit
-         ! "no convergence"
         i = i + 1
 
         if(sizebool)then
@@ -136,13 +123,7 @@ program simpRunner
                 exit
             end if
         end if
-        if(fitbool)then
-            ! stagnate = stagnate + 1
-            ! if(stagnate > 10)
-            exit
-            ! if(stagnate == 1)thentargetFit = targetFit / 10.d0
-            ! fitbool = .false.
-        end if
+        if(fitbool)exit
     end do
 
     call sort(points)
@@ -155,8 +136,9 @@ program simpRunner
         else
             print*,"Did not converge after 1000 iterations"
         end if
-        print*,"i     x          y          z          avg evals   total evals"
-        print("(I5.1,1x,3F10.5,9x,I5.1)"),i,points(1)%cor(:), real(totalevals) / real(i), totalevals
+        print*,"  i       fit    avg evals   total evals"
+        print("(I5.1,1x,2F10.5,5x,I5.1)"),i,minfit, real(totalevals) / real(i), totalevals
+        print*,points(1)%cor
     end if
 
     call mpi_finalize()
