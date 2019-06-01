@@ -11,7 +11,7 @@ module simplex
     real           :: target_a(1000), source(1000), tar(1000)
     type(mpi_comm) :: comm
     real           :: alpha, beta, gamma, delta, minfit, tol
-    procedure(fitness), pointer   :: fitFunc => null()
+    procedure(mcrt), pointer   :: fitFunc => null()
     character(len=:), allocatable :: fmt
 
     type :: point
@@ -214,7 +214,7 @@ module simplex
         end function threeDRosenbrock
 
 
-        real function fitness(p)
+        real function mcrt(p)
         !
         !  calculate fitness
         !
@@ -243,18 +243,18 @@ module simplex
                 write(u,"(a)")"name:nadh"
                 write(u,"(a)")"excite:nadh.dat"
                 write(u,"(a)")"emission:nadh_fluro.dat"
-                write(u,"(a)")"location:10000"
-                write(u,"(a,F9.7,a)")"concs: ",concs(1)," 0.0 0.0 0.0 0.0"
+                write(u,"(a)")"location:11100"
+                write(u,"(a,5(F9.7,1x))")"concs: ", concs(1), concs(2), concs(3), 0.d0 , 0.d0
                 write(u,"(a)")"name:fad"
                 write(u,"(a)")"excite:fad.dat"
                 write(u,"(a)")"emission:fad_fluro.dat"
-                write(u,"(a)")"location:00100"
-                write(u,"(a,F9.7,a)")"concs: 0.0 0.0 ",concs(2)," 0.0 0.0"
+                write(u,"(a)")"location:11100"
+                write(u,"(a,5(F9.7,1x))")"concs: ", concs(4), concs(5), concs(6), 0.d0 , 0.d0
                 write(u,"(a)")"name:riboflavin"
                 write(u,"(a)")"excite:nadh.dat"
                 write(u,"(a)")"emission:tyrosine_fluro.dat"
-                write(u,"(a)")"location:01000"
-                write(u,"(a,F9.7,a)")"concs: 0.0 ",concs(3)," 0.0 0.0 0.0"
+                write(u,"(a)")"location:00000"
+                write(u,"(a,F9.7,a)")"concs: 0.0 0.0 0.0 0.0 0.0"
                 close(u)
             end if
 
@@ -267,13 +267,13 @@ module simplex
 
             if(id==0)call readfile(trim(fileplace)//"fluro_out.dat", src)
             call mpi_bcast(src, size(src), mpi_double_precision, 0, comm)
-            fitness = 0.d0
+            mcrt = 0.d0
             do i = 1, size(tar)
-                fitness = fitness + (tar(i) - src(i))**2.
+                mcrt = mcrt + (tar(i) - src(i))**2.
             end do
 
-            if(fitness < minfit)then
-                minfit = fitness
+            if(mcrt < minfit)then
+                minfit = mcrt
                 if(id == 0)then
                     open(newunit=u,file=trim(fileplace)//"best_fluro.dat")
                     do i = 1, size(src)
@@ -283,7 +283,7 @@ module simplex
                     close(u)
                 end if
             end if
-        end function fitness
+        end function mcrt
 
 
 

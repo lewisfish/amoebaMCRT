@@ -15,7 +15,6 @@ SRCS =      ran2.f \
             constants.f90 \
             photon_vars.f90 \
             iarray.f90 \
-            trackPacket_mod.f90 \
             opt_prop.f90 \
             subs.f90 \
             fluorophores.f90 \
@@ -29,12 +28,15 @@ SRCS =      ran2.f \
             stokes.f90 \
             sourceph.f90 \
             writer.f90 \
-            getFluence_mod.f90 \
             mcpolar.f90 \
-            main2.f90 
+            2Dsimplex_mod.f90 \
+            simpRun.f90
 
-#             2Dsimplex_mod.f90 \
-#             simpRun.f90
+#                         trackPacket_mod.f90 \
+
+#             getFluence_mod.f90 \
+
+#             main2.f90 
 
                       
 OBJECTS = $(SRCS:.f90=.o)

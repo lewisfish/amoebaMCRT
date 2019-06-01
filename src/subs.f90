@@ -35,12 +35,12 @@ implicit none
             !sets all arrays to zero
             implicit none
 
-            jmean = 0.
+            ! jmean = 0.
             xface = 0.
             yface = 0.
             zface = 0.
             rhokap = 0.
-            jmeanGLOBAL = 0.
+            ! jmeanGLOBAL = 0.
             refrac = 0.
             conc = 0.
             albedo = 0.
@@ -60,7 +60,7 @@ implicit none
 
             integer , intent(IN) :: numproc
 
-            integer(int64) :: limit, cnt,i
+            integer(int64) :: limit, cnt
 
             limit = mem_free()
             ! limit = 1000000000_int64
@@ -83,11 +83,11 @@ implicit none
             ! inquire(iolength=i)rhokap(:)
             ! call chck_mem(cnt, i, limit, 'rhokap', numproc)
 
-            allocate(jmean(nxg, nyg, nzg,3))
+            ! allocate(jmean(nxg, nyg, nzg,3))
             ! inquire(iolength=i)jmean(:,:,:,:)
             ! call chck_mem(cnt, i, limit, 'jmean', numproc)
 
-            allocate(jmeanGLOBAL(nxg, nyg, nzg,3))
+            ! allocate(jmeanGLOBAL(nxg, nyg, nzg,3))
             ! inquire(iolength=i)jmeanGLOBAL(:,:,:,:)
             ! call chck_mem(cnt, i, limit, 'jmeanGLOBAL', numproc)
 

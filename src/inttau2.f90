@@ -13,9 +13,9 @@ CONTAINS
     !
         use constants,    only : xmax, ymax, zmax
         use photon_vars,  only : xp, yp, zp, nxp, nyp, nzp
-        use iarray,       only : rhokap, jmean
+        use iarray,       only : rhokap
         use fluorophores, only : fluro
-        use trackPacket,  only : stack, trackPhoton, tracker, point
+        ! use trackPacket,  only : stack, trackPhoton, tracker, point
 
         use vector_class
    
@@ -44,12 +44,12 @@ CONTAINS
         taurun = 0.
         d = 0.
         dir = (/.FALSE., .FALSE., .FALSE./)
-        if(trackFlag)then
-            tau = tauin
-            if(zcur == 0.5d0)return
-        else
+        ! if(trackFlag)then
+        !     tau = tauin
+        !     if(zcur == 0.5d0)return
+        ! else
             tau = -log(ran2(iseed))
-        end if
+        ! end if
 
         do
             dir = (/.FALSE., .FALSE., .FALSE./)
@@ -58,18 +58,18 @@ CONTAINS
             if(taurun + taucell < tau)then
                 taurun = taurun + taucell
                 d = d + dcell
-                if(trackFlag)then
-                    jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
-                end if
+                ! if(trackFlag)then
+                !     jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
+                ! end if
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .TRUE., dir, delta, tflag, iseed, &
                                 tau, taurun)
             else
 
                 dcell = (tau - taurun) / rhokap(cellk)
                 d = d + dcell
-                if(trackFlag)then
-                    jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
-                end if
+                ! if(trackFlag)then
+                !     jmean(celli,cellj,cellk,j) = jmean(celli,cellj,cellk,j) + dcell
+                ! end if
                 call update_pos(xcur, ycur, zcur, celli, cellj, cellk, dcell, .FALSE., dir, delta, tflag, iseed, &
                                 tau, taurun)
                 exit
@@ -91,7 +91,7 @@ CONTAINS
         xp = xcur - xmax
         yp = ycur - ymax
         zp = zcur - zmax
-        if(trackPhoton)call tracker%push(point(xp, yp, zp, nxp, nyp, nzp, tau, j))
+        ! if(trackPhoton)call tracker%push(point(xp, yp, zp, nxp, nyp, nzp, tau, j))
         xcell = celli
         ycell = cellj
         zcell = cellk

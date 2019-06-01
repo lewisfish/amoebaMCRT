@@ -18,8 +18,8 @@ program simpRunner
 
     character(len=50) :: file, logfile
 
-    file = "6d-thesis.dat"
-    logfile = "log-6d-thesis.dat"
+    file = "6d-test-mcrt.dat"
+    logfile = "log-test-mcrt.dat"
     comm = mpi_comm_world
     call mpi_init()
     call mpi_comm_size(comm, numproc)
@@ -28,11 +28,11 @@ program simpRunner
     sizebool = .false.
     fitbool = .false.
     N = 6
-    call init_simplex(N, points, threeDRosenbrock)
+    call init_simplex(N, points, mcrt)
 
     ! for bannana func 2D
-    x1 = point([-3d0, -3.d0, -3.d0, -3.d0, -3.d0, -3.d0])
-    call genSimplex(x1, points)
+    ! x1 = point([-3d0, -3.d0, -3.d0, -3.d0, -3.d0, -3.d0])
+    ! call genSimplex(x1, points)
 
 
     !for sphere func 2D
@@ -59,7 +59,7 @@ program simpRunner
     call directory()
     call reader1()
 
-    ! call readfile(trim(fileplace)//'target.dat', tar)
+    call readfile(trim(fileplace)//'Baseline-65-target.dat', tar)
 
     totalevals = 0
     minfit = 1000000.d0
@@ -78,6 +78,10 @@ program simpRunner
         gamma = 2.d0    !expansion   coeff (gamma)
         delta = 0.5d0   !shrink      coeff (sigma)
     end if
+
+    x1 = point([3d-6, 3d-6, 1.d-6, 2.5d-7, 2.5d-7, 2.5d-7])
+    call genSimplex(x1, points)
+
 
     !concs = [1.05d-6, 5.25d-4, 1.25d-4]
     ! x1 = point([4.3949d-7, 9.8206d-5, 3.7276d-5])!point([5.0894235891464901e-5, 0.54754837274552404, 4.8787149055385505e-3])

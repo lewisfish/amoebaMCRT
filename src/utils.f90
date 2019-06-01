@@ -406,6 +406,7 @@ module utils
             sreclaimable = 0
             inactive = 0
             freeram = 0
+            active = 0
             do 
                 read(u,*, iostat=io)tmp, i
                 if(IS_IOSTAT_END(io))exit
