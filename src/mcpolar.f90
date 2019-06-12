@@ -37,7 +37,7 @@ module monte
         type(mpi_comm), intent(IN)  :: comm
         logical,        intent(IN)  :: pflag
 
-        integer :: q, w, e, i, cnt1=0, cnt2=0, cnt3=0, u
+        integer :: q, w, e, i, cnt1, cnt2, cnt3
         integer :: nphotons, jseed, j, xcell, ycell, zcell, fluro_img(1000,3), fluroglobal(1000,3)!, dep(500)
         logical :: tflag
         real    :: ran, delta, start, finish, wave_in, ran2, rtmp, nscatt, nscattglobal!, img(250,250), imgglobal(250,250)
@@ -53,7 +53,9 @@ module monte
         call zarray()
         src = 0.d0
         !**** Read in parameters from the file input.params
-
+        cnt1 = 0
+        cnt2 = 0
+        cnt3 = 0
 
         open(10,file=trim(resdir)//'input.params',status='old')
         read(10,*) nphotons
@@ -271,9 +273,5 @@ module monte
 
         call dealloc_array()
         deallocate(f_array)
-        call mpi_barrier(comm)
-        call mpi_finalize()
-        stop
-
 end subroutine mcpolar
 end module monte

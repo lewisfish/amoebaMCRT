@@ -4,6 +4,38 @@ module ch_opt
 
     contains
 
+
+        subroutine intralipidSet(vol, wave)
+
+            use fluorophores, only : fluro
+            use opt_prop, only : hgg, g2, mua, kappa, albedoIL, mus
+
+            implicit none
+
+            real,        intent(IN) :: wave, vol
+
+            real :: conc, fact
+
+
+            hgg = 0.7
+            g2  = hgg**2.
+            mua = 0.d0
+
+            !calculate scat particle volume conc from volume using 22.7% scat particle% in IL 20% 500uL of water
+            conc = (vol / (6.d0 - vol)) * 22.7d0
+            conc = conc / 100.d0
+
+            mus = 3.873d9 * wave**(-2.397d0) !get mus for 20% IL in cm^-1
+            fact = conc / 0.227d0 ! scaling factor
+            mus = mus * fact ! scale mus to n% IL linearly
+            ! mus = mus * 1300.d0 ! convert to m^-1
+
+            kappa  = mus + mua 
+            albedoIL = mus / kappa
+
+        end subroutine intralipidSet
+
+
         subroutine opt_set(wave, f_array)
 
             use skin_layers

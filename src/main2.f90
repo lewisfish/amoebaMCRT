@@ -39,7 +39,7 @@ program main2
             !nadh, fad, !madeup
     ! concs = [.01d-2, .03d-3,0.d0]
     !nadh, fad, madeup
-    concs = [0.,0., 1.25d-4]![0.0000001, .0005, .00001]
+    concs = [0.,0., 1.d0]![0.0000001, .0005, .00001]
 
     comm = mpi_comm_world
     call mpi_init()
@@ -54,26 +54,23 @@ program main2
     j = 1
 
     open(newunit=u,file=trim(resdir)//"fluro.params",status="old")
-    write(u,"(a)")"name:nadh"
-    write(u,"(a)")"excite:nadh.dat"
-    write(u,"(a)")"emission:nadh_fluro.dat"
-    write(u,"(a)")"location:00100"
-    write(u,"(a,3(F9.7,1x))")"concs: 0.0 0.0 ",concs(3), concs(3), concs(3)
+    write(u,"(a)")"name:Coproporphyrin"
+    write(u,"(a)")"excite:Coproporphyrin.dat"
+    write(u,"(a)")"emission:Coproporphyrin_fluro.dat"
+    write(u,"(a)")"location:11111"
+    write(u,"(a,5(F9.7,1x))")"concs: ", concs(3), concs(3), concs(3), concs(3), concs(3)
+    
     write(u,"(a)")"name:fad"
     write(u,"(a)")"excite:fad.dat"
     write(u,"(a)")"emission:fad_fluro.dat"
-    write(u,"(a)")"location:00100"
-    write(u,"(a,3(F9.7,1x))")"concs: 0.0 0.0 ",concs(3), concs(3), concs(3)
-    ! write(u,"(a)")"name:fad"
-    ! write(u,"(a)")"excite:nadh.dat"
-    ! write(u,"(a)")"emission:nadh_fluro.dat"
-    ! write(u,"(a)")"location:00100"
-    ! write(u,"(a,F9.7,a)")"concs: 0.0 0.0 ",concs(2)," 0.0 0.0"
+    write(u,"(a)")"location:00000"
+    write(u,"(a,5(F9.7,1x))")"concs: ", concs(1), concs(1), concs(1), concs(1), concs(1)
+
     write(u,"(a)")"name:riboflavin"
     write(u,"(a)")"excite:nadh.dat"
     write(u,"(a)")"emission:nadh_fluro.dat"
-    write(u,"(a)")"location:01000"
-    write(u,"(a,F9.7,a)")"concs: 0.0 ",concs(3)," 0.0 0.0 0.0"
+    write(u,"(a)")"location:00000"
+    write(u,"(a)")"concs: 0.0 0.0 0.0 0.0 0.0"
     close(u)
 
 

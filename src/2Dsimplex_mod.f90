@@ -137,7 +137,6 @@ module simplex
                     else
                         tmp(i+1)%cor(j) = p%cor(j) + (p%cor(j) * .05d0)
                         tmp(i+1)%fit = fitFunc(tmp(i+1))
-
                     end if
                 end do
             end do
@@ -205,7 +204,7 @@ module simplex
 
             threeDRosenbrock = 0.d0
             
-            do i = 1, 6-1
+            do i = 1, p%n-1
                 threeDRosenbrock = threeDRosenbrock + &
                                    (100.d0*(p%cor(i+1) - p%cor(i)**2)**2 + (1.d0 - p%cor(i))**2)
 
@@ -645,7 +644,7 @@ module simplex
 
             real, intent(IN) :: p
 
-            clamp = max(p, 1.d-9)
+            clamp = p!max(p, 1.d-9)
 
         end function clamp
 
