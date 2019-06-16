@@ -110,12 +110,9 @@ Module fluorophores
                             error stop "error in fluorophores param file: location"
                          end if
                     case ("concs")
-                        do p = 1, 5
-                            pos = index(trim(line), " ")
-                            line = trim(line(pos+1:))
-                            pos2 = index(trim(line), " ")
-                            read(line(:pos2), "(f100.50)")f_array(j)%concs(p)
-                        end do
+                        pos = index(trim(line), " ")
+                        line = trim(line(pos+1:))
+                        read(line, "(5(f15.12,1x))")f_array(j)%concs(:)
                 end select
             end do
 

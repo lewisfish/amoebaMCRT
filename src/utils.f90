@@ -211,19 +211,25 @@ module utils
         ! end function str_r4
 
 
-        function str_R8(i)
+        function str_R8(i, len)
 
             implicit none
 
-            double precision, intent(IN) :: i
+            double precision,  intent(IN) :: i
+            integer, optional, intent(IN) :: len
 
             character(len=:), allocatable :: str_R8
             character(len=100) :: string
 
             write(string,'(f100.16)') I
 
-            str_R8 = trim(adjustl(string))
-        end function str_r8
+            if(present(len))then
+                str_R8 = trim(adjustl(string))
+                str_R8 = trim(adjustl(str_R8(:len)))
+            else
+                str_R8 = trim(adjustl(string))
+            end if
+        end function str_R8
 
 
         function str_R8array(a)
